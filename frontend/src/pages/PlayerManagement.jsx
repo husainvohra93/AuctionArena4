@@ -517,16 +517,50 @@ const PlayerManagement = () => {
           </Card>
 
           {/* Players Grid */}
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSelectAll}
+              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+            >
+              {selectedPlayers.length === filteredPlayers.length && filteredPlayers.length > 0 ? (
+                <>
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Deselect All
+                </>
+              ) : (
+                <>
+                  <Square className="w-4 h-4 mr-2" />
+                  Select All ({filteredPlayers.length})
+                </>
+              )}
+            </Button>
+            {selectedPlayers.length > 0 && (
+              <span className="text-sm text-slate-400">{selectedPlayers.length} selected</span>
+            )}
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredPlayers.map((player, index) => (
               <Card 
                 key={player.player_id}
                 data-testid={`player-card-${player.player_id}`}
-                className="glass-card border-0 card-hover animate-fade-in-up"
+                className={`glass-card border-0 card-hover animate-fade-in-up ${selectedPlayers.includes(player.player_id) ? 'ring-2 ring-blue-500' : ''}`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <CardContent className="p-4">
                   <div className="relative mb-4">
+                    {/* Checkbox */}
+                    <div 
+                      className="absolute top-2 left-2 z-10 cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); toggleSelectPlayer(player.player_id); }}
+                    >
+                      <Checkbox
+                        checked={selectedPlayers.includes(player.player_id)}
+                        className="bg-slate-800 border-slate-600 data-[state=checked]:bg-blue-500"
+                      />
+                    </div>
                     <img
                       src={player.image_url || 'https://images.unsplash.com/photo-1583072728920-4ed8c72cbc01?w=300&h=400&fit=crop'}
                       alt={player.name}
