@@ -1149,6 +1149,21 @@ async def delete_player(player_id: str, request: Request):
     
     return {"message": "Player deleted"}
 
+class BulkDeleteRequest(BaseModel):
+    ids: List[str]
+
+@api_router.post("/players/bulk-delete")
+async def bulk_delete_players(data: BulkDeleteRequest, request: Request):
+    """Bulk delete players (admin only)"""
+    await require_admin(request)
+    
+    if not data.ids:
+        raise HTTPException(status_code=400, detail="No player IDs provided")
+    
+    result = await db.players.delete_many({"player_id": {"$in": data.ids}})
+    
+    return {"message": f"Deleted {result.deleted_count} players", "deleted_count": result.deleted_count}
+
 @api_router.post("/players/{player_id}/reset")
 async def reset_player(player_id: str, request: Request):
     """Reset player to unsold status (admin only)"""
