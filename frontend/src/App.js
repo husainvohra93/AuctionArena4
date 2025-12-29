@@ -16,6 +16,7 @@ import TournamentManagement from "@/pages/TournamentManagement";
 import AuctionManagement from "@/pages/AuctionManagement";
 import AdminAuctionControl from "@/pages/AdminAuctionControl";
 import AuctionViewScreen from "@/pages/AuctionViewScreen";
+import UserManagement from "@/pages/UserManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -168,6 +169,11 @@ function AppRouter() {
       <Route path="/admin/auction/:auctionId/control" element={
         <ProtectedRoute requiredRole="admin">
           <AdminAuctionControl />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/users" element={
+        <ProtectedRoute requiredRole="admin">
+          <UserManagement />
         </ProtectedRoute>
       } />
       {/* Legacy auction control route */}
