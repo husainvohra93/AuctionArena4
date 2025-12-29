@@ -276,7 +276,8 @@ class AuctionArenaAPITester:
         if failed_tests:
             print(f"\n❌ FAILED TESTS ({len(failed_tests)}):")
             for test in failed_tests:
-                print(f"   • {test['test']} - {test.get('error', f'Status {test.get(\"actual_status\", \"Unknown\")}')}")
+                error_msg = test.get('error', f'Status {test.get("actual_status", "Unknown")}')
+                print(f"   • {test['test']} - {error_msg}")
 
 def main():
     print("🚀 Starting AuctionArena Backend API Tests")
