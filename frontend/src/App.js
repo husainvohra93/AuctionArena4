@@ -12,6 +12,10 @@ import TeamManagement from "@/pages/TeamManagement";
 import AuctionControl from "@/pages/AuctionControl";
 import LiveAuction from "@/pages/LiveAuction";
 import TeamOwnerDashboard from "@/pages/TeamOwnerDashboard";
+import TournamentManagement from "@/pages/TournamentManagement";
+import AuctionManagement from "@/pages/AuctionManagement";
+import AdminAuctionControl from "@/pages/AdminAuctionControl";
+import AuctionViewScreen from "@/pages/AuctionViewScreen";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -151,6 +155,22 @@ function AppRouter() {
           <TeamManagement />
         </ProtectedRoute>
       } />
+      <Route path="/admin/tournaments" element={
+        <ProtectedRoute requiredRole="admin">
+          <TournamentManagement />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/tournaments/:tournamentId/auctions" element={
+        <ProtectedRoute requiredRole="admin">
+          <AuctionManagement />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/auction/:auctionId/control" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminAuctionControl />
+        </ProtectedRoute>
+      } />
+      {/* Legacy auction control route */}
       <Route path="/admin/auction" element={
         <ProtectedRoute requiredRole="admin">
           <AuctionControl />
@@ -163,6 +183,9 @@ function AppRouter() {
           <TeamOwnerDashboard />
         </ProtectedRoute>
       } />
+      
+      {/* Public View Screen (no auth required) */}
+      <Route path="/auction/:auctionId/view" element={<AuctionViewScreen />} />
       
       {/* Live Auction - Both roles can access */}
       <Route path="/auction" element={

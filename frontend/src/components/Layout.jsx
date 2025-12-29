@@ -10,7 +10,8 @@ import {
   Gavel, 
   LogOut,
   Trophy,
-  Radio
+  Radio,
+  Calendar
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -34,10 +35,11 @@ const Layout = ({ children }) => {
 
   const adminLinks = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/tournaments', icon: Trophy, label: 'Tournaments' },
     { path: '/admin/players', icon: UserCircle, label: 'Players' },
     { path: '/admin/teams', icon: Users, label: 'Teams' },
-    { path: '/admin/auction', icon: Gavel, label: 'Auction Control' },
-    { path: '/auction', icon: Radio, label: 'Live Auction' },
+    { path: '/admin/auction', icon: Gavel, label: 'Quick Auction' },
+    { path: '/auction', icon: Radio, label: 'Live View' },
   ];
 
   const teamOwnerLinks = [
@@ -47,10 +49,16 @@ const Layout = ({ children }) => {
 
   const links = user?.role === 'admin' ? adminLinks : teamOwnerLinks;
 
+  const isActive = (path) => {
+    if (path === '/admin' && location.pathname === '/admin') return true;
+    if (path !== '/admin' && location.pathname.startsWith(path)) return true;
+    return false;
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900/50 border-r border-slate-800 flex flex-col">
+      <aside className="w-64 bg-slate-900/50 border-r border-slate-800 flex flex-col flex-shrink-0">
         {/* Logo */}
         <div className="p-6 border-b border-slate-800">
           <Link to={user?.role === 'admin' ? '/admin' : '/team'} className="flex items-center gap-2">
@@ -68,7 +76,7 @@ const Layout = ({ children }) => {
               key={link.path}
               to={link.path}
               data-testid={`nav-${link.label.toLowerCase().replace(' ', '-')}`}
-              className={`sidebar-link ${location.pathname === link.path ? 'active' : ''}`}
+              className={`sidebar-link ${isActive(link.path) ? 'active' : ''}`}
             >
               <link.icon className="w-5 h-5" />
               <span className="font-medium">{link.label}</span>
