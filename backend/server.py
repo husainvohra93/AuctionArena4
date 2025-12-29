@@ -801,6 +801,37 @@ async def sell_player(auction_id: str, request: Request):
         }
     )
     
+    # Clear auction state and set confetti trigger
+    await db.auctions.update_one(
+        {"auction_id": auction_id},
+        {"$set": {
+            "current_player_id": None,
+            "current_bid": 0,
+            "current_bidder_id": None,
+            "current_bidder_name": None,
+            "bid_history": [],
+            "last_sold_player_id": player_id,
+            "last_sold_time": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return await get_auction(auction_id)
+
+@api_router.post("/auctions/{auction_id}/unsold")
+async def mark_unsold(auction_id: str, request: Request):
+    """Mark current player as unsold and add to re-auction pool (admin only)"""
+    await require_admin(request)
+    
+    auction = await db.auctions.find_one({"auction_id": auction_id}, {"_id": 0})
+    if not auction or not auction.get("current_player_id"):
+        raise HTTPException(status_code=400, detail="No player in auction")
+    
+    # Update player - mark as unsold and flag for re-auction pool
+    await db.players.update_one(
+        {"player_id": auction["current_player_id"]},
+        {"$set": {"status": "unsold", "current_price": 0, "auction_id": None, "was_unsold": True}}
+    )
+    
     # Clear auction state
     await db.auctions.update_one(
         {"auction_id": auction_id},
@@ -815,27 +846,51 @@ async def sell_player(auction_id: str, request: Request):
     
     return await get_auction(auction_id)
 
-@api_router.post("/auctions/{auction_id}/unsold")
-async def mark_unsold(auction_id: str, request: Request):
-    """Mark current player as unsold (admin only)"""
+@api_router.post("/auctions/{auction_id}/random-pick")
+async def random_pick_player(auction_id: str, request: Request, from_reauction: bool = False):
+    """Randomly pick a player for auction (admin only)"""
     await require_admin(request)
     
     auction = await db.auctions.find_one({"auction_id": auction_id}, {"_id": 0})
-    if not auction or not auction.get("current_player_id"):
-        raise HTTPException(status_code=400, detail="No player in auction")
+    if not auction:
+        raise HTTPException(status_code=404, detail="Auction not found")
     
-    # Update player
+    if auction.get("current_player_id"):
+        raise HTTPException(status_code=400, detail="Current player must be sold/unsold first")
+    
+    # Get available players
+    if from_reauction:
+        # Pick from re-auction pool
+        players = await db.players.find(
+            {"tournament_id": auction["tournament_id"], "status": "unsold", "was_unsold": True},
+            {"_id": 0}
+        ).to_list(1000)
+    else:
+        # Pick from main pool (not yet auctioned)
+        players = await db.players.find(
+            {"tournament_id": auction["tournament_id"], "status": "unsold", "was_unsold": {"$ne": True}},
+            {"_id": 0}
+        ).to_list(1000)
+    
+    if not players:
+        raise HTTPException(status_code=400, detail="No players available in pool")
+    
+    # Random pick
+    import random
+    player = random.choice(players)
+    
+    # Set player for auction
     await db.players.update_one(
-        {"player_id": auction["current_player_id"]},
-        {"$set": {"status": "unsold", "current_price": 0, "auction_id": None}}
+        {"player_id": player["player_id"]},
+        {"$set": {"status": "in_auction", "current_price": player["base_price"], "auction_id": auction_id}}
     )
     
-    # Clear auction state
+    # Update auction state
     await db.auctions.update_one(
         {"auction_id": auction_id},
         {"$set": {
-            "current_player_id": None,
-            "current_bid": 0,
+            "current_player_id": player["player_id"],
+            "current_bid": player["base_price"],
             "current_bidder_id": None,
             "current_bidder_name": None,
             "bid_history": []
