@@ -28,18 +28,21 @@ const API = `${BACKEND_URL}/api`;
 const TeamManagement = () => {
   const [teams, setTeams] = useState([]);
   const [users, setUsers] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [tournamentFilter, setTournamentFilter] = useState('all');
   
   const [formData, setFormData] = useState({
     name: '',
     short_name: '',
     logo_url: '',
     budget: 10000000,
-    owner_email: ''
+    owner_email: '',
+    tournament_id: ''
   });
 
   useEffect(() => {
@@ -48,12 +51,14 @@ const TeamManagement = () => {
 
   const fetchData = async () => {
     try {
-      const [teamsRes, usersRes] = await Promise.all([
+      const [teamsRes, usersRes, tournamentsRes] = await Promise.all([
         axios.get(`${API}/teams`, { withCredentials: true }),
-        axios.get(`${API}/users`, { withCredentials: true })
+        axios.get(`${API}/users`, { withCredentials: true }),
+        axios.get(`${API}/tournaments`, { withCredentials: true })
       ]);
       setTeams(teamsRes.data);
       setUsers(usersRes.data);
+      setTournaments(tournamentsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -66,7 +71,8 @@ const TeamManagement = () => {
     try {
       const payload = {
         ...formData,
-        budget: parseFloat(formData.budget)
+        budget: parseFloat(formData.budget),
+        tournament_id: formData.tournament_id || null
       };
 
       if (editingTeam) {
