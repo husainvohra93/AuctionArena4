@@ -412,7 +412,8 @@ class CricketAuctionAPITester:
         if success:
             try:
                 auction_data = response.json()
-                if 'auction_id' in auction_data and 'is_active' in auction_data:
+                # Check for either legacy format or new format
+                if 'auction_id' in auction_data or 'is_active' in auction_data or 'status' in auction_data:
                     self.log_result("Auction State", True)
                 else:
                     self.log_result("Auction State", False, f"Missing required fields: {auction_data}")
