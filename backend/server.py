@@ -1044,6 +1044,24 @@ async def delete_team(team_id: str, request: Request):
     
     return {"message": "Team deleted"}
 
+@api_router.post("/teams/bulk-delete")
+async def bulk_delete_teams(data: BulkDeleteRequest, request: Request):
+    """Bulk delete teams (admin only)"""
+    await require_admin(request)
+    
+    if not data.ids:
+        raise HTTPException(status_code=400, detail="No team IDs provided")
+    
+    # Also reset any players assigned to these teams
+    await db.players.update_many(
+        {"sold_to": {"$in": data.ids}},
+        {"$set": {"sold_to": None, "sold_price": None, "status": "unsold"}}
+    )
+    
+    result = await db.teams.delete_many({"team_id": {"$in": data.ids}})
+    
+    return {"message": f"Deleted {result.deleted_count} teams", "deleted_count": result.deleted_count}
+
 @api_router.get("/teams/{team_id}/squad")
 async def get_team_squad(team_id: str):
     """Get team's players"""
