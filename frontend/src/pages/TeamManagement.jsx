@@ -49,6 +49,7 @@ const TeamManagement = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     name: '',
