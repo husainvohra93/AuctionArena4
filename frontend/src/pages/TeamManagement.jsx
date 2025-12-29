@@ -247,7 +247,7 @@ const TeamManagement = () => {
                     />
                   </div>
                   <div>
-                    <Label className="text-slate-300">Budget (₹) *</Label>
+                    <Label className="text-slate-300">Budget (Points) *</Label>
                     <Input
                       data-testid="team-budget-input"
                       type="number"

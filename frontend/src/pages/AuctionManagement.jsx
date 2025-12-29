@@ -467,7 +467,7 @@ const AuctionManagement = () => {
                       <div className="space-y-1">
                         {auction.bid_increment_rules.slice(0, 3).map((rule, i) => (
                           <p key={i} className="text-xs text-slate-400">
-                            At ₹{rule.range_start?.toLocaleString()} → +₹{rule.increment_by?.toLocaleString()}
+                            At {rule.range_start?.toLocaleString()} Pts → +{rule.increment_by?.toLocaleString()} Pts
                           </p>
                         ))}
                         {auction.bid_increment_rules.length > 3 && (

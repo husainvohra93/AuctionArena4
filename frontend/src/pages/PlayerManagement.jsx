@@ -258,7 +258,7 @@ const PlayerManagement = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-slate-300">Base Price (₹) *</Label>
+                      <Label className="text-slate-300">Base Price (Points) *</Label>
                       <Input
                         data-testid="player-base-price-input"
                         type="number"
