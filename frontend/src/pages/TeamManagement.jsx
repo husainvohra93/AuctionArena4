@@ -387,6 +387,7 @@ const TeamManagement = () => {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           {/* Tournament Filter */}
