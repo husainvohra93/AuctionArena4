@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import axios from 'axios';
-import { Users, UserCircle, Gavel, IndianRupee, TrendingUp, AlertCircle } from 'lucide-react';
+import { Users, UserCircle, Gavel, Coins, TrendingUp, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
                     <p className="stat-value mt-1 text-yellow-400 font-mono">{formatPrice(stats?.total_spent || 0)}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                    <IndianRupee className="w-6 h-6 text-yellow-400" />
+                    <Coins className="w-6 h-6 text-yellow-400" />
                   </div>
                 </div>
               </CardContent>

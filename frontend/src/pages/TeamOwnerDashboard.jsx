@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Download,
   FileSpreadsheet,
-  FileText
+  FileText,
+  Coins
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -158,7 +159,7 @@ const TeamOwnerDashboard = () => {
                     <p className="stat-value mt-1 font-mono">{formatPrice(team.budget)}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                    <IndianRupee className="w-6 h-6 text-blue-400" />
+                    <Coins className="w-6 h-6 text-blue-400" />
                   </div>
                 </div>
               </CardContent>
@@ -172,7 +173,7 @@ const TeamOwnerDashboard = () => {
                     <p className="stat-value mt-1 font-mono text-green-400">{formatPrice(team.remaining_budget)}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                    <IndianRupee className="w-6 h-6 text-green-400" />
+                    <Coins className="w-6 h-6 text-green-400" />
                   </div>
                 </div>
               </CardContent>
