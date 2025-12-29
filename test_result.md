@@ -101,3 +101,147 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Cricket auction platform with multiple tournaments, dynamic bidding, and new features: currency change to Points, confetti celebration, unsold pool management, and auction modes (manual/random pick)"
+
+backend:
+  - task: "Reset auction clears was_unsold flag"
+    implemented: true
+    working: NA
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Updated reset_auction endpoint to clear was_unsold flag along with other player fields"
+
+  - task: "Random pick player endpoint"
+    implemented: true
+    working: NA
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Endpoint at /api/auctions/{id}/random-pick with from_reauction parameter to pick from either fresh or re-auction pool"
+
+  - task: "Auction pick_mode field"
+    implemented: true
+    working: NA
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "pick_mode field added to auction model (manual/random)"
+
+  - task: "Unsold pool separation (was_unsold flag)"
+    implemented: true
+    working: NA
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Players marked unsold get was_unsold=true, auction endpoint returns separate unsold_players and reauction_pool lists"
+
+  - task: "Confetti trigger on player sale"
+    implemented: true
+    working: NA
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "sell_player sets last_sold_player_id and last_sold_time, get_auction returns show_confetti=true for 5 seconds after sale"
+
+frontend:
+  - task: "Currency change from Rupees to Points"
+    implemented: true
+    working: NA
+    file: "Multiple files"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Updated formatPrice function in AdminAuctionControl, AdminDashboard, PlayerManagement, TeamManagement, AuctionControl, TeamOwnerDashboard, AuctionViewScreen to show 'Pts' instead of '₹'. Also updated labels."
+
+  - task: "Confetti animation on AuctionViewScreen"
+    implemented: true
+    working: NA
+    file: "/app/frontend/src/pages/AuctionViewScreen.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Integrated canvas-confetti package, triggers celebration when show_confetti is true from backend"
+
+  - task: "Unsold pool UI in AdminAuctionControl"
+    implemented: true
+    working: NA
+    file: "/app/frontend/src/pages/AdminAuctionControl.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Added tabs for Fresh pool and Re-auction pool, admin can click on players from either pool to start auction"
+
+  - task: "Random pick button in AdminAuctionControl"
+    implemented: true
+    working: NA
+    file: "/app/frontend/src/pages/AdminAuctionControl.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Added Random button that calls /api/auctions/{id}/random-pick endpoint to randomly select a player"
+
+  - task: "Auction pick mode selection in AuctionManagement"
+    implemented: true
+    working: NA
+    file: "/app/frontend/src/pages/AuctionManagement.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Added radio buttons for Manual Pick vs Random Pick mode when creating/editing auction"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 4
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Currency change from Rupees to Points"
+    - "Unsold pool UI in AdminAuctionControl"
+    - "Random pick button in AdminAuctionControl"
+    - "Confetti animation on AuctionViewScreen"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Implemented all 6 user-requested features: 1) Currency changed from ₹ to Points across all files, 2) Confetti celebration integrated in AuctionViewScreen using canvas-confetti, 3) Unsold pool with tabs (Fresh/Re-auction) in AdminAuctionControl, 4) Random pick button for both pools, 5) Auction mode selection (manual/random) in AuctionManagement form, 6) Backend updates for was_unsold flag and reset_auction. Please test: a) Create/edit auction with pick mode, b) Start auction and mark a player unsold to verify it moves to re-auction pool, c) Test random pick from both pools, d) Verify Points currency displays correctly, e) Sell a player and check confetti on view screen"
