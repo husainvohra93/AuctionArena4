@@ -17,9 +17,10 @@ import {
   AlertTriangle,
   Minus,
   Users,
-  IndianRupee,
   ExternalLink,
-  ArrowLeft
+  ArrowLeft,
+  Shuffle,
+  RefreshCw
 } from 'lucide-react';
 import {
   AlertDialog,
