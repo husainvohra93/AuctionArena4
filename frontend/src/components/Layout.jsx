@@ -11,7 +11,8 @@ import {
   LogOut,
   Trophy,
   Radio,
-  Calendar
+  Calendar,
+  UserCog
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -38,6 +39,7 @@ const Layout = ({ children }) => {
     { path: '/admin/tournaments', icon: Trophy, label: 'Tournaments' },
     { path: '/admin/players', icon: UserCircle, label: 'Players' },
     { path: '/admin/teams', icon: Users, label: 'Teams' },
+    { path: '/admin/users', icon: UserCog, label: 'Users' },
     { path: '/admin/auction', icon: Gavel, label: 'Quick Auction' },
     { path: '/auction', icon: Radio, label: 'Live View' },
   ];
