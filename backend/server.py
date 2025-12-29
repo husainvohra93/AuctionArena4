@@ -503,14 +503,25 @@ async def get_auction(auction_id: str):
     # Check if there was a recent sale for confetti trigger
     last_sold = auction.get("last_sold_player_id")
     last_sold_time = auction.get("last_sold_time")
+    last_sold_team_id = auction.get("last_sold_team_id")
+    last_sold_price = auction.get("last_sold_price")
     show_confetti = False
+    last_sold_player = None
+    last_sold_team = None
+    
     if last_sold_time:
         if isinstance(last_sold_time, str):
             last_sold_time = datetime.fromisoformat(last_sold_time.replace('Z', '+00:00'))
         elif last_sold_time.tzinfo is None:
             last_sold_time = last_sold_time.replace(tzinfo=timezone.utc)
         time_diff = (datetime.now(timezone.utc) - last_sold_time).total_seconds()
-        show_confetti = time_diff < 5  # Show confetti for 5 seconds after sale
+        show_confetti = time_diff < 4  # Show confetti for 4 seconds after sale
+        
+        # Get last sold player details
+        if last_sold and show_confetti:
+            last_sold_player = await db.players.find_one({"player_id": last_sold}, {"_id": 0})
+            if last_sold_team_id:
+                last_sold_team = await db.teams.find_one({"team_id": last_sold_team_id}, {"_id": 0})
     
     return {
         **auction,
@@ -520,7 +531,10 @@ async def get_auction(auction_id: str):
         "unsold_players": unsold_players,
         "reauction_pool": reauction_pool,
         "show_confetti": show_confetti,
-        "last_sold_player_id": last_sold
+        "last_sold_player_id": last_sold,
+        "last_sold_player": last_sold_player,
+        "last_sold_team": last_sold_team,
+        "last_sold_price": last_sold_price
     }
 
 @api_router.put("/auctions/{auction_id}")
