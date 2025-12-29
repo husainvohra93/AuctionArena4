@@ -239,16 +239,28 @@ const TeamManagement = () => {
               <p className="text-slate-400 mt-1">{teams.length} teams registered</p>
             </div>
             
-            <Dialog open={dialogOpen} onOpenChange={(open) => {
-              setDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button data-testid="add-team-btn" className="btn-primary flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Team
+            <div className="flex gap-2">
+              {selectedTeams.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                  className="bg-red-600 hover:bg-red-500"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete ({selectedTeams.length})
                 </Button>
-              </DialogTrigger>
+              )}
+              
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button data-testid="add-team-btn" className="btn-primary flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Team
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="bg-slate-900 border-slate-700">
                 <DialogHeader>
                   <DialogTitle className="font-heading text-white">
