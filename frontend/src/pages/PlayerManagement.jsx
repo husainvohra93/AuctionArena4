@@ -443,10 +443,13 @@ const PlayerManagement = () => {
                   </div>
                   
                   <h3 className="font-heading font-bold text-white text-lg truncate">{player.name}</h3>
-                  <div className="flex items-center gap-2 mt-1 mb-3">
+                  <div className="flex items-center gap-2 mt-1 mb-2">
                     <span className="badge-role">{player.role}</span>
                     {player.age && <span className="text-xs text-slate-500">{player.age} yrs</span>}
                   </div>
+                  {player.tournament_id && (
+                    <p className="text-xs text-blue-400 mb-3 truncate">🏆 {getTournamentName(player.tournament_id)}</p>
+                  )}
                   
                   <div className="flex justify-between items-center mb-4">
                     <div>
