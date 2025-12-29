@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, RotateCcw, Search, Filter } from 'lucide-react';
+import { Plus, Pencil, Trash2, RotateCcw, Search, Filter, Upload, Link as LinkIcon } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
