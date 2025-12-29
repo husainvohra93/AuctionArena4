@@ -692,6 +692,25 @@ const TeamManagement = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Bulk Delete Confirmation Dialog */}
+          <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+            <AlertDialogContent className="bg-slate-900 border-slate-700">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-white">Delete {selectedTeams.length} Teams?</AlertDialogTitle>
+                <AlertDialogDescription className="text-slate-400">
+                  Are you sure you want to delete {selectedTeams.length} selected teams? 
+                  This will also reset any players assigned to these teams. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-slate-800 border-slate-700 text-slate-300">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-500">
+                  Delete All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </Layout>
