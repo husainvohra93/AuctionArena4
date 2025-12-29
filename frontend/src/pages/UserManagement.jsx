@@ -89,7 +89,7 @@ const UserManagement = () => {
         name: formData.name,
         email: formData.email,
         role: formData.role,
-        team_id: formData.team_id || null
+        team_id: formData.team_id === 'none' ? '' : (formData.team_id || null)
       };
 
       if (editingUser) {
@@ -97,6 +97,7 @@ const UserManagement = () => {
         toast.success('User updated successfully');
       } else {
         await axios.post(`${API}/admin/users`, payload, { withCredentials: true });
+        toast.success('User created successfully');
         toast.success('User created successfully');
       }
       
