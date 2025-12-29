@@ -829,12 +829,18 @@ def main():
         tester.test_teams_and_players,
         tester.test_dashboard_stats,
         tester.test_import_export_endpoints,
-        # New feature tests
+        # Previous feature tests
         tester.test_auction_pick_mode,
         tester.test_unsold_pool_logic,
         tester.test_random_pick_functionality,
         tester.test_confetti_trigger,
-        tester.test_reset_auction_clears_was_unsold
+        tester.test_reset_auction_clears_was_unsold,
+        # NEW FEATURE TESTS
+        tester.test_image_upload_endpoints,
+        tester.test_user_management_endpoints,
+        tester.test_team_owner_export_endpoints,
+        tester.test_enhanced_sold_overlay,
+        tester.test_export_templates_with_image_url
     ]
     
     for test in tests:
