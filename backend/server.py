@@ -910,7 +910,7 @@ async def reset_auction(auction_id: str, request: Request):
     
     tournament_id = auction["tournament_id"]
     
-    # Reset all players for this tournament
+    # Reset all players for this tournament (including was_unsold flag)
     await db.players.update_many(
         {"tournament_id": tournament_id},
         {"$set": {
@@ -918,7 +918,8 @@ async def reset_auction(auction_id: str, request: Request):
             "sold_to": None,
             "sold_price": None,
             "current_price": 0,
-            "auction_id": None
+            "auction_id": None,
+            "was_unsold": False
         }}
     )
     
