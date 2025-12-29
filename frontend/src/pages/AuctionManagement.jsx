@@ -157,6 +157,58 @@ const AuctionManagement = () => {
     }
   };
 
+  // File upload refs
+  const teamsFileRef = useRef(null);
+  const playersFileRef = useRef(null);
+
+  const handleTeamsUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await axios.post(`${API}/import/teams/${tournamentId}`, formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success(response.data.message);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to import teams');
+    }
+    e.target.value = '';
+  };
+
+  const handlePlayersUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await axios.post(`${API}/import/players/${tournamentId}`, formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success(response.data.message);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to import players');
+    }
+    e.target.value = '';
+  };
+
+  const downloadTemplate = (type) => {
+    window.open(`${API}/export/${type}-template`, '_blank');
+  };
+
+  const exportData = (type) => {
+    window.open(`${API}/export/${type}/${tournamentId}`, '_blank');
+  };
+
   if (loading) {
     return (
       <Layout>
