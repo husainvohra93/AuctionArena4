@@ -154,7 +154,8 @@ const TeamManagement = () => {
       short_name: '',
       logo_url: '',
       budget: 10000000,
-      owner_email: ''
+      owner_email: '',
+      tournament_id: ''
     });
   };
 
@@ -163,6 +164,15 @@ const TeamManagement = () => {
     if (price >= 100000) return `₹${(price / 100000).toFixed(2)} L`;
     return `₹${price?.toLocaleString()}`;
   };
+
+  const getTournamentName = (tournamentId) => {
+    const tournament = tournaments.find(t => t.tournament_id === tournamentId);
+    return tournament?.name || 'Not Assigned';
+  };
+
+  const filteredTeams = teams.filter(team => {
+    return tournamentFilter === 'all' || team.tournament_id === tournamentFilter;
+  });
 
   const teamOwners = users.filter(u => u.role === 'team_owner' && !u.team_id);
 
