@@ -1451,6 +1451,412 @@ async def export_auction_results(tournament_id: str):
         headers={'Content-Disposition': f'attachment; filename=auction_results_{tournament_id}.xlsx'}
     )
 
+# ==================== IMAGE UPLOAD ====================
+
+import os
+import shutil
+from pathlib import Path
+
+UPLOAD_DIR = Path("/app/backend/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+@api_router.post("/upload/image")
+async def upload_image(file: UploadFile = File(...), request: Request = None):
+    """Upload an image file and return the URL"""
+    if request:
+        await require_auth(request)
+    
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Invalid file type. Allowed: jpg, png, gif, webp")
+    
+    # Generate unique filename
+    file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"{uuid.uuid4().hex}.{file_ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    # Return the URL
+    return {"url": f"/api/uploads/{filename}", "filename": filename}
+
+@api_router.get("/uploads/{filename}")
+async def get_uploaded_image(filename: str):
+    """Serve uploaded images"""
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Determine content type
+    ext = filename.split('.')[-1].lower()
+    content_types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+    }
+    content_type = content_types.get(ext, 'application/octet-stream')
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(file_path, media_type=content_type)
+
+# ==================== USER MANAGEMENT (Admin) ====================
+
+class UserCreateAdmin(BaseModel):
+    email: str
+    name: str
+    role: str = "team_owner"
+    team_id: Optional[str] = None
+
+class UserUpdateAdmin(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    team_id: Optional[str] = None
+
+@api_router.post("/admin/users")
+async def admin_create_user(user_data: UserCreateAdmin, request: Request):
+    """Admin creates a new user"""
+    await require_admin(request)
+    
+    # Check if user already exists
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+    
+    # Validate role
+    if user_data.role not in ["admin", "team_owner"]:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be 'admin' or 'team_owner'")
+    
+    # Validate team if provided
+    if user_data.team_id:
+        team = await db.teams.find_one({"team_id": user_data.team_id})
+        if not team:
+            raise HTTPException(status_code=404, detail="Team not found")
+    
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    user_doc = {
+        "user_id": user_id,
+        "email": user_data.email,
+        "name": user_data.name,
+        "picture": None,
+        "role": user_data.role,
+        "team_id": user_data.team_id,
+        "created_at": datetime.now(timezone.utc),
+        "created_by_admin": True
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Update team owner if team assigned
+    if user_data.team_id:
+        await db.teams.update_one(
+            {"team_id": user_data.team_id},
+            {"$set": {"owner_id": user_id, "owner_email": user_data.email}}
+        )
+    
+    return await db.users.find_one({"user_id": user_id}, {"_id": 0})
+
+@api_router.put("/admin/users/{user_id}")
+async def admin_update_user(user_id: str, user_data: UserUpdateAdmin, request: Request):
+    """Admin updates a user"""
+    await require_admin(request)
+    
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_fields = {}
+    
+    if user_data.name is not None:
+        update_fields["name"] = user_data.name
+    
+    if user_data.role is not None:
+        if user_data.role not in ["admin", "team_owner"]:
+            raise HTTPException(status_code=400, detail="Invalid role")
+        update_fields["role"] = user_data.role
+    
+    if user_data.team_id is not None:
+        # Handle team assignment/deassignment
+        old_team_id = user.get("team_id")
+        
+        if user_data.team_id == "":
+            # Deassign team
+            update_fields["team_id"] = None
+            if old_team_id:
+                await db.teams.update_one(
+                    {"team_id": old_team_id},
+                    {"$set": {"owner_id": None, "owner_email": None}}
+                )
+        else:
+            # Assign new team
+            team = await db.teams.find_one({"team_id": user_data.team_id})
+            if not team:
+                raise HTTPException(status_code=404, detail="Team not found")
+            
+            update_fields["team_id"] = user_data.team_id
+            
+            # Remove old team assignment
+            if old_team_id and old_team_id != user_data.team_id:
+                await db.teams.update_one(
+                    {"team_id": old_team_id},
+                    {"$set": {"owner_id": None, "owner_email": None}}
+                )
+            
+            # Set new team owner
+            await db.teams.update_one(
+                {"team_id": user_data.team_id},
+                {"$set": {"owner_id": user_id, "owner_email": user.get("email")}}
+            )
+    
+    if update_fields:
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": update_fields}
+        )
+    
+    return await db.users.find_one({"user_id": user_id}, {"_id": 0})
+
+@api_router.delete("/admin/users/{user_id}")
+async def admin_delete_user(user_id: str, request: Request):
+    """Admin deletes a user"""
+    current_user = await require_admin(request)
+    
+    # Prevent self-deletion
+    if current_user.get("user_id") == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Remove team assignment if any
+    if user.get("team_id"):
+        await db.teams.update_one(
+            {"team_id": user["team_id"]},
+            {"$set": {"owner_id": None, "owner_email": None}}
+        )
+    
+    # Delete user sessions
+    await db.user_sessions.delete_many({"user_id": user_id})
+    
+    # Delete user
+    await db.users.delete_one({"user_id": user_id})
+    
+    return {"message": "User deleted successfully"}
+
+@api_router.get("/admin/users")
+async def admin_get_all_users(request: Request):
+    """Admin gets all users with team info"""
+    await require_admin(request)
+    
+    users = await db.users.find({}, {"_id": 0}).to_list(1000)
+    teams = await db.teams.find({}, {"_id": 0}).to_list(100)
+    team_map = {t["team_id"]: t for t in teams}
+    
+    # Enrich users with team details
+    for user in users:
+        if user.get("team_id") and user["team_id"] in team_map:
+            user["team_name"] = team_map[user["team_id"]].get("name")
+            user["team_short_name"] = team_map[user["team_id"]].get("short_name")
+        else:
+            user["team_name"] = None
+            user["team_short_name"] = None
+    
+    return users
+
+# ==================== TEAM OWNER EXPORTS ====================
+
+@api_router.get("/team-owner/export/excel")
+async def team_owner_export_excel(request: Request):
+    """Team owner exports their team data as Excel"""
+    user = await require_auth(request)
+    
+    if not user.get("team_id"):
+        raise HTTPException(status_code=400, detail="No team assigned to your account")
+    
+    team_id = user["team_id"]
+    
+    # Get team data
+    team = await db.teams.find_one({"team_id": team_id}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # Get tournament data
+    tournament = None
+    if team.get("tournament_id"):
+        tournament = await db.tournaments.find_one({"tournament_id": team["tournament_id"]}, {"_id": 0})
+    
+    # Get players
+    players = await db.players.find({"sold_to": team_id}, {"_id": 0}).to_list(100)
+    
+    # Get auction data
+    auctions = []
+    if team.get("tournament_id"):
+        auctions = await db.auctions.find({"tournament_id": team["tournament_id"]}, {"_id": 0}).to_list(10)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Team Summary Sheet
+        team_data = pd.DataFrame([{
+            'Team Name': team.get('name'),
+            'Short Name': team.get('short_name'),
+            'Tournament': tournament.get('name') if tournament else 'N/A',
+            'Total Budget': team.get('budget'),
+            'Remaining Budget': team.get('remaining_budget'),
+            'Amount Spent': team.get('budget', 0) - team.get('remaining_budget', 0),
+            'Players Acquired': len(players),
+            'Owner Email': team.get('owner_email', ''),
+            'Export Date': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+        }])
+        team_data.to_excel(writer, index=False, sheet_name='Team Summary')
+        
+        # Players Sheet
+        if players:
+            players_data = pd.DataFrame([{
+                'Player Name': p.get('name'),
+                'Role': p.get('role'),
+                'Base Price': p.get('base_price'),
+                'Purchased Price': p.get('sold_price'),
+                'Age': p.get('age'),
+                'Batting Style': p.get('batting_style'),
+                'Bowling Style': p.get('bowling_style'),
+                'Matches': p.get('matches'),
+                'Runs': p.get('runs'),
+                'Wickets': p.get('wickets')
+            } for p in players])
+            players_data.to_excel(writer, index=False, sheet_name='Squad')
+        
+        # Auction Info Sheet
+        if auctions:
+            auction_data = pd.DataFrame([{
+                'Auction Name': a.get('name'),
+                'Date': a.get('date', 'N/A'),
+                'Status': a.get('status'),
+                'Players Per Team Limit': a.get('players_per_team')
+            } for a in auctions])
+            auction_data.to_excel(writer, index=False, sheet_name='Auctions')
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename={team.get("short_name", "team")}_data.xlsx'}
+    )
+
+@api_router.get("/team-owner/export/pdf")
+async def team_owner_export_pdf(request: Request):
+    """Team owner exports their team data as PDF"""
+    user = await require_auth(request)
+    
+    if not user.get("team_id"):
+        raise HTTPException(status_code=400, detail="No team assigned to your account")
+    
+    team_id = user["team_id"]
+    
+    # Get team data
+    team = await db.teams.find_one({"team_id": team_id}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # Get tournament data
+    tournament = None
+    if team.get("tournament_id"):
+        tournament = await db.tournaments.find_one({"tournament_id": team["tournament_id"]}, {"_id": 0})
+    
+    # Get players
+    players = await db.players.find({"sold_to": team_id}, {"_id": 0}).to_list(100)
+    
+    # Generate HTML for PDF
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; padding: 20px; }}
+            h1 {{ color: #1e3a5f; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }}
+            h2 {{ color: #374151; margin-top: 30px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+            th, td {{ border: 1px solid #d1d5db; padding: 10px; text-align: left; }}
+            th {{ background-color: #1e3a5f; color: white; }}
+            tr:nth-child(even) {{ background-color: #f3f4f6; }}
+            .summary {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }}
+            .summary-item {{ background: #f8fafc; padding: 15px; border-radius: 8px; }}
+            .summary-label {{ color: #6b7280; font-size: 12px; }}
+            .summary-value {{ font-size: 24px; font-weight: bold; color: #1e3a5f; }}
+            .footer {{ margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <h1>{team.get('name', 'Team')} - Squad Report</h1>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <div class="summary-label">Tournament</div>
+                <div class="summary-value">{tournament.get('name') if tournament else 'N/A'}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Total Budget</div>
+                <div class="summary-value">{team.get('budget', 0):,.0f} Pts</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Remaining Budget</div>
+                <div class="summary-value">{team.get('remaining_budget', 0):,.0f} Pts</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Players Acquired</div>
+                <div class="summary-value">{len(players)}</div>
+            </div>
+        </div>
+        
+        <h2>Squad ({len(players)} Players)</h2>
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Player Name</th>
+                <th>Role</th>
+                <th>Purchase Price</th>
+                <th>Age</th>
+                <th>Matches</th>
+            </tr>
+    """
+    
+    for i, player in enumerate(players, 1):
+        html_content += f"""
+            <tr>
+                <td>{i}</td>
+                <td>{player.get('name', 'N/A')}</td>
+                <td>{player.get('role', 'N/A')}</td>
+                <td>{player.get('sold_price', 0):,.0f} Pts</td>
+                <td>{player.get('age', 'N/A')}</td>
+                <td>{player.get('matches', 0)}</td>
+            </tr>
+        """
+    
+    html_content += f"""
+        </table>
+        
+        <div class="footer">
+            Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} | AuctionArena
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Return HTML as downloadable file (can be converted to PDF by browser)
+    return Response(
+        content=html_content,
+        media_type='text/html',
+        headers={'Content-Disposition': f'attachment; filename={team.get("short_name", "team")}_report.html'}
+    )
+
 # ==================== LEGACY AUCTION STATE (for backward compatibility) ====================
 
 @api_router.get("/auction/state")
