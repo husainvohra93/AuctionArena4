@@ -81,6 +81,31 @@
     .badge-role {
         @apply bg-blue-500/20 text-blue-400 border border-blue-500/50 px-2 py-0.5 rounded text-xs font-mono uppercase;
     }
+
+    /* Common UI Components */
+    .btn-primary {
+        @apply bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors;
+    }
+
+    .btn-bid {
+        @apply bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition-all hover:scale-105;
+    }
+
+    .container-main {
+        @apply max-w-7xl mx-auto;
+    }
+
+    .data-table {
+        @apply w-full border-collapse;
+    }
+
+    .data-table th {
+        @apply text-left text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4 border-b border-slate-700;
+    }
+
+    .data-table td {
+        @apply py-4 px-4 border-b border-slate-800;
+    }
 }
 
 /* Glow Effects */
