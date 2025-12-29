@@ -689,8 +689,17 @@ async def admin_place_bid(auction_id: str, bid: AdminBidRequest, request: Reques
     
     # Calculate new bid amount
     current_bid = auction.get("current_bid", 0)
-    increment = get_bid_increment(current_bid, auction.get("bid_increment_rules", []))
-    new_bid = current_bid + increment
+    current_bidder = auction.get("current_bidder_id")
+    
+    # First bid should be at base price (current_bid is already set to base_price when player is selected)
+    # Subsequent bids should add increment
+    if current_bidder is None:
+        # First bid - use base price directly
+        new_bid = current_bid
+    else:
+        # Subsequent bids - add increment
+        increment = get_bid_increment(current_bid, auction.get("bid_increment_rules", []))
+        new_bid = current_bid + increment
     
     # Check team budget
     if new_bid > team.get("remaining_budget", 0):
