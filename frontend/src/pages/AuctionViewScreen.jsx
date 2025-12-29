@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { Gavel, TrendingUp, Users, Trophy } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -10,12 +11,60 @@ const AuctionViewScreen = () => {
   const { auctionId } = useParams();
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastSoldPlayerId, setLastSoldPlayerId] = useState(null);
+  const confettiTriggered = useRef(false);
 
   useEffect(() => {
     fetchAuction();
     const interval = setInterval(fetchAuction, 1000); // Poll every second for real-time feel
     return () => clearInterval(interval);
   }, [auctionId]);
+
+  // Trigger confetti when a player is sold
+  useEffect(() => {
+    if (auction?.show_confetti && auction?.last_sold_player_id && 
+        auction.last_sold_player_id !== lastSoldPlayerId) {
+      setLastSoldPlayerId(auction.last_sold_player_id);
+      triggerConfetti();
+    }
+  }, [auction?.show_confetti, auction?.last_sold_player_id, lastSoldPlayerId]);
+
+  const triggerConfetti = () => {
+    // Fire confetti from both sides
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    const colors = ['#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6'];
+
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.6 },
+        colors: colors
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.6 },
+        colors: colors
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+
+    // Big burst in center
+    confetti({
+      particleCount: 150,
+      spread: 100,
+      origin: { x: 0.5, y: 0.5 },
+      colors: colors
+    });
+  };
 
   const fetchAuction = async () => {
     try {
@@ -28,10 +77,10 @@ const AuctionViewScreen = () => {
   };
 
   const formatPrice = (price) => {
-    if (price >= 10000000) return `₹${(price / 10000000).toFixed(2)} Cr`;
-    if (price >= 100000) return `₹${(price / 100000).toFixed(2)} L`;
-    if (price >= 1000) return `₹${(price / 1000).toFixed(1)}K`;
-    return `₹${price?.toLocaleString()}`;
+    if (price >= 10000000) return `${(price / 10000000).toFixed(2)} Cr Pts`;
+    if (price >= 100000) return `${(price / 100000).toFixed(2)} L Pts`;
+    if (price >= 1000) return `${(price / 1000).toFixed(1)}K Pts`;
+    return `${price?.toLocaleString()} Pts`;
   };
 
   if (loading) {
