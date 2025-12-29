@@ -683,6 +683,22 @@ class AuctionArenaAPITester:
         """Test team owner export endpoints"""
         print("\n📊 Testing Team Owner Export Endpoints...")
         
+        # First, assign a team to the admin user for testing
+        admin_user_id = "admin_1766994496116"  # Admin user ID
+        team_assignment_data = {"team_id": "team_657233ed"}  # First team
+        
+        assign_success, assign_result = self.run_test(
+            "Assign Team to Admin User",
+            "PUT",
+            f"admin/users/{admin_user_id}",
+            200,
+            team_assignment_data
+        )
+        
+        if not assign_success:
+            print("❌ Failed to assign team to admin user")
+            return False
+        
         # Test Excel export
         excel_success, excel_result = self.run_test(
             "Team Owner Excel Export",
@@ -697,6 +713,16 @@ class AuctionArenaAPITester:
             "GET",
             "team-owner/export/pdf",
             200
+        )
+        
+        # Clean up - remove team assignment
+        cleanup_data = {"team_id": ""}
+        cleanup_success, cleanup_result = self.run_test(
+            "Remove Team Assignment from Admin User",
+            "PUT",
+            f"admin/users/{admin_user_id}",
+            200,
+            cleanup_data
         )
         
         if excel_success:
