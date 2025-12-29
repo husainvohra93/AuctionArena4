@@ -259,6 +259,19 @@ const TeamManagement = () => {
                     <p className="text-xs text-slate-500 mt-1">{formatPrice(parseFloat(formData.budget) || 0)}</p>
                   </div>
                   <div>
+                    <Label className="text-slate-300">Tournament *</Label>
+                    <Select value={formData.tournament_id} onValueChange={(v) => setFormData({ ...formData, tournament_id: v })}>
+                      <SelectTrigger data-testid="team-tournament-select" className="bg-slate-800 border-slate-700 text-white">
+                        <SelectValue placeholder="Select Tournament" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        {tournaments.map((t) => (
+                          <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-slate-300">Owner Email (Optional)</Label>
                     <Input
                       type="email"
