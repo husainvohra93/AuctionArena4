@@ -98,7 +98,8 @@ const TeamManagement = () => {
       short_name: team.short_name,
       logo_url: team.logo_url || '',
       budget: team.budget,
-      owner_email: team.owner_email || ''
+      owner_email: team.owner_email || '',
+      tournament_id: team.tournament_id || ''
     });
     setDialogOpen(true);
   };
