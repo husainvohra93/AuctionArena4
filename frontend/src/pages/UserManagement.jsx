@@ -278,7 +278,7 @@ const UserManagement = () => {
                         <SelectValue placeholder="No team assigned" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="" className="text-slate-400 hover:bg-slate-700">
+                        <SelectItem value="none" className="text-slate-400 hover:bg-slate-700">
                           No team assigned
                         </SelectItem>
                         {teams.map((team) => (
