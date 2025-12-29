@@ -19,8 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Users, UserPlus, Upload, Coins } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Pencil, Trash2, Users, UserPlus, Upload, Coins, CheckSquare, Square } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -36,6 +47,8 @@ const TeamManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [tournamentFilter, setTournamentFilter] = useState('all');
   const [uploading, setUploading] = useState(false);
+  const [selectedTeams, setSelectedTeams] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
