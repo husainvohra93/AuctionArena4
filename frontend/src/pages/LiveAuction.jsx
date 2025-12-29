@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Gavel, 
   Radio, 
-  IndianRupee,
+  Coins,
   TrendingUp,
   Users,
   AlertCircle
@@ -280,7 +280,7 @@ const LiveAuction = () => {
                         
                         <div className="flex gap-3">
                           <div className="flex-1 relative">
-                            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                             <Input
                               data-testid="bid-amount-input"
                               type="number"
