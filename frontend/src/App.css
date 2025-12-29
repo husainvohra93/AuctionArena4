@@ -1,34 +1,157 @@
-.App-logo {
-    height: 40vmin;
+/* Stadium Night Theme Styles */
+
+/* Hero gradient for login page */
+.hero-gradient {
+    background: linear-gradient(to bottom right, #020617, #1e1b4b);
+}
+
+/* Glass gradient */
+.glass-gradient {
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+}
+
+/* Glow beam effect */
+.glow-beam {
+    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+}
+
+/* Player card spotlight */
+.player-spotlight {
+    position: relative;
+}
+
+.player-spotlight::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
     pointer-events: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
+/* Bid animation */
+@keyframes bid-flash {
+    0% {
+        background-color: rgba(34, 197, 94, 0.3);
+    }
+    100% {
+        background-color: transparent;
     }
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.bid-flash {
+    animation: bid-flash 0.5s ease-out;
 }
 
-.App-link {
-    color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
+/* Price counter animation */
+@keyframes price-change {
+    0% {
+        transform: scale(1.2);
+        color: #4ade80;
     }
+    100% {
+        transform: scale(1);
+        color: inherit;
+    }
+}
+
+.price-animate {
+    animation: price-change 0.3s ease-out;
+}
+
+/* Sidebar styles */
+.sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-200;
+}
+
+.sidebar-link.active {
+    @apply text-white bg-blue-600/20 border-l-2 border-blue-500;
+}
+
+/* Table styles */
+.data-table {
+    @apply w-full text-left;
+}
+
+.data-table th {
+    @apply text-xs uppercase tracking-widest text-slate-500 font-semibold pb-4 border-b border-slate-800;
+}
+
+.data-table td {
+    @apply py-4 border-b border-slate-800/50;
+}
+
+.data-table tr:hover {
+    @apply bg-slate-800/30;
+}
+
+/* Input styles for dark theme */
+input, select, textarea {
+    @apply bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder:text-slate-500;
+}
+
+/* Button variants */
+.btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-transform active:scale-95;
+}
+
+.btn-secondary {
+    @apply bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2 px-4 rounded-lg border border-slate-700;
+}
+
+.btn-bid {
+    @apply bg-green-600 hover:bg-green-500 text-white text-xl font-black py-4 px-8 rounded-full shadow-[0_0_30px_rgba(34,197,94,0.6)] transition-all active:scale-95;
+}
+
+/* Card hover effect */
+.card-hover {
+    @apply transition-all duration-300 hover:border-white/20 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Stat card */
+.stat-card {
+    @apply glass-card p-6 rounded-xl;
+}
+
+.stat-value {
+    @apply text-3xl font-heading font-bold text-white tabular-nums;
+}
+
+.stat-label {
+    @apply text-xs uppercase tracking-widest text-slate-500 mt-1;
+}
+
+/* Avatar styles */
+.avatar {
+    @apply w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden;
+}
+
+/* Loading spinner */
+@keyframes spin {
     to {
         transform: rotate(360deg);
     }
+}
+
+.spinner {
+    @apply w-6 h-6 border-2 border-slate-700 border-t-blue-500 rounded-full;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Team logo placeholder */
+.team-logo {
+    @apply w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-2xl font-bold;
+}
+
+/* Player image */
+.player-image {
+    @apply w-full aspect-[3/4] object-cover rounded-lg bg-slate-800;
+}
+
+/* Responsive container */
+.container-main {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
