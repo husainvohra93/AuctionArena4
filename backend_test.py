@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class AuctionArenaAPITester:
-    def __init__(self, base_url="https://cricket-mart-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://playermart.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.session_token = "session_1766994496116"  # Admin session token

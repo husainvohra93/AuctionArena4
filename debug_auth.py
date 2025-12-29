@@ -65,7 +65,7 @@ def debug_auth():
         print(f"MongoDB verification error: {e}")
     
     # Test API with different auth methods
-    api_url = "https://cricket-mart-2.preview.emergentagent.com/api"
+    api_url = "https://playermart.preview.emergentagent.com/api"
     
     # Test 1: Authorization header
     print("\n🧪 Test 1: Authorization header")
