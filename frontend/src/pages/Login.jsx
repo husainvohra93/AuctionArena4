@@ -64,10 +64,10 @@ const Login = () => {
             <Trophy className="w-12 h-12 text-blue-500" />
           </div>
           <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight mb-4">
-            CRICKET<span className="text-blue-500">MART</span>
+            AUCTION<span className="text-blue-500">ARENA</span>
           </h1>
           <p className="text-slate-400 text-lg sm:text-xl max-w-md mx-auto">
-            The Ultimate Player Auction Platform for Local Cricket Tournaments
+            The Ultimate Player Auction Platform for Cricket Tournaments
           </p>
         </div>
 

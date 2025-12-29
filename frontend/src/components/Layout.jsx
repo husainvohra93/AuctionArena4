@@ -64,7 +64,7 @@ const Layout = ({ children }) => {
           <Link to={user?.role === 'admin' ? '/admin' : '/team'} className="flex items-center gap-2">
             <Trophy className="w-8 h-8 text-blue-500" />
             <span className="font-heading font-bold text-xl text-white">
-              CRICKET<span className="text-blue-500">MART</span>
+              AUCTION<span className="text-blue-500">ARENA</span>
             </span>
           </Link>
         </div>
