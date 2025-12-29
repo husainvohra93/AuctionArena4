@@ -153,7 +153,12 @@ const AdminDashboard = () => {
                           <p className="font-medium text-white truncate">{player.name}</p>
                           <p className="text-xs text-slate-500 uppercase">{player.role}</p>
                         </div>
-                        <p className="font-mono text-green-400 font-bold">{formatPrice(player.sold_price)}</p>
+                        <div className="text-right">
+                          <p className="font-mono text-green-400 font-bold">{formatPrice(player.sold_price)}</p>
+                          {player.sold_to && (
+                            <p className="text-xs text-blue-400">→ {getTeamName(player.sold_to)}</p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
