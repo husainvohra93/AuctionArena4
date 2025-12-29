@@ -352,46 +352,51 @@ const PlayerManagement = () => {
                           data-testid="player-image-input"
                           value={formData.image_url}
                           onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                          placeholder="https://... or upload below"
+                          placeholder="Paste URL or click Upload"
                           className="bg-slate-800 border-slate-700 text-white flex-1"
                         />
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files[0];
-                              if (!file) return;
-                              
-                              setUploading(true);
-                              const uploadData = new FormData();
-                              uploadData.append('file', file);
-                              
-                              try {
-                                const res = await axios.post(`${API}/upload/image`, uploadData, {
-                                  withCredentials: true,
-                                  headers: { 'Content-Type': 'multipart/form-data' }
-                                });
-                                setFormData({ ...formData, image_url: `${BACKEND_URL}${res.data.url}` });
-                                toast.success('Image uploaded!');
-                              } catch (err) {
-                                toast.error(err.response?.data?.detail || 'Upload failed');
-                              } finally {
-                                setUploading(false);
-                              }
-                              e.target.value = '';
-                            }}
-                          />
-                          <Button type="button" variant="outline" className="border-slate-700 text-slate-300" disabled={uploading}>
-                            <Upload className="w-4 h-4 mr-1" />
-                            {uploading ? 'Uploading...' : 'Upload'}
-                          </Button>
-                        </label>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            
+                            setUploading(true);
+                            const uploadData = new FormData();
+                            uploadData.append('file', file);
+                            
+                            try {
+                              const res = await axios.post(`${API}/upload/image`, uploadData, {
+                                withCredentials: true,
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                              });
+                              setFormData(prev => ({ ...prev, image_url: `${BACKEND_URL}${res.data.url}` }));
+                              toast.success('Image uploaded!');
+                            } catch (err) {
+                              toast.error(err.response?.data?.detail || 'Upload failed');
+                            } finally {
+                              setUploading(false);
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="border-slate-700 text-slate-300 hover:bg-slate-800" 
+                          disabled={uploading}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-1" />
+                          {uploading ? 'Uploading...' : 'Upload'}
+                        </Button>
                       </div>
                       {formData.image_url && (
                         <div className="mt-2 flex items-center gap-2">
-                          <img src={formData.image_url} alt="Preview" className="w-16 h-16 rounded object-cover" />
+                          <img src={formData.image_url} alt="Preview" className="w-16 h-16 rounded object-cover" onError={(e) => e.target.style.display='none'} />
                           <span className="text-xs text-slate-500 truncate flex-1">{formData.image_url}</span>
                         </div>
                       )}
