@@ -55,13 +55,15 @@
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* Glassmorphic Cards */
-.glass-card {
-    @apply bg-slate-950/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-xl;
-}
+@layer components {
+    /* Glassmorphic Cards */
+    .glass-card {
+        @apply bg-slate-950/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-xl;
+    }
 
-.glass-card:hover {
-    @apply border-white/20 transition-all duration-300;
+    .glass-card:hover {
+        @apply border-white/20 transition-all duration-300;
+    }
 }
 
 /* Glow Effects */
