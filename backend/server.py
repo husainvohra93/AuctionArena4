@@ -1170,9 +1170,6 @@ async def delete_player(player_id: str, request: Request):
     
     return {"message": "Player deleted"}
 
-class BulkDeleteRequest(BaseModel):
-    ids: List[str]
-
 @api_router.post("/players/bulk-delete")
 async def bulk_delete_players(data: BulkDeleteRequest, request: Request):
     """Bulk delete players (admin only)"""
