@@ -35,6 +35,7 @@ const TeamManagement = () => {
   const [editingTeam, setEditingTeam] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [tournamentFilter, setTournamentFilter] = useState('all');
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
