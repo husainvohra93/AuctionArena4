@@ -132,6 +132,8 @@ class AuctionCreate(BaseModel):
     date: Optional[str] = None
     players_per_team: int = 15
     bid_increment_rules: List[Dict] = []  # [{range_start: 1000, increment_by: 100}, ...]
+    pick_mode: str = "manual"  # manual or random
+    random_pick_delay: int = 5  # seconds delay for random pick
 
 class Auction(BaseModel):
     auction_id: str
@@ -140,6 +142,8 @@ class Auction(BaseModel):
     date: Optional[str] = None
     players_per_team: int = 15
     bid_increment_rules: List[Dict] = []
+    pick_mode: str = "manual"
+    random_pick_delay: int = 5
     status: str = "draft"  # draft, live, paused, completed
     current_player_id: Optional[str] = None
     current_bid: float = 0
