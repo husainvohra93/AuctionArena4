@@ -817,7 +817,7 @@ async def sell_player(auction_id: str, request: Request):
         }
     )
     
-    # Clear auction state and set confetti trigger
+    # Clear auction state and set confetti trigger with sold info
     await db.auctions.update_one(
         {"auction_id": auction_id},
         {"$set": {
@@ -827,6 +827,8 @@ async def sell_player(auction_id: str, request: Request):
             "current_bidder_name": None,
             "bid_history": [],
             "last_sold_player_id": player_id,
+            "last_sold_team_id": team_id,
+            "last_sold_price": sold_price,
             "last_sold_time": datetime.now(timezone.utc)
         }}
     )
