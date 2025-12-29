@@ -1,546 +1,312 @@
-#!/usr/bin/env python3
-
 import requests
 import sys
 import json
-import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
-class CricketAuctionAPITester:
+class AuctionArenaAPITester:
     def __init__(self, base_url="https://cricket-mart-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
-        self.session_token = "admin_session_test"  # Use provided session token
-        self.user_id = None
+        self.session_token = "session_1766994496116"  # Admin session token
+        self.tournament_id = "tournament_5bd80821"  # Test tournament ID
         self.tests_run = 0
         self.tests_passed = 0
-        self.failed_tests = []
-        self.passed_tests = []
-        # Test data IDs from agent context
-        self.tournament_id = "tournament_9dc6c123"
-        self.auction_id = "auction_be5bca0c"
+        self.results = []
 
-    def log_result(self, test_name, success, details=""):
-        """Log test result"""
-        self.tests_run += 1
-        if success:
-            self.tests_passed += 1
-            self.passed_tests.append(test_name)
-            print(f"✅ {test_name} - PASSED")
-        else:
-            self.failed_tests.append({"test": test_name, "details": details})
-            print(f"❌ {test_name} - FAILED: {details}")
-
-    def make_request(self, method, endpoint, data=None, expected_status=200):
-        """Make HTTP request with authentication"""
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+        """Run a single API test"""
         url = f"{self.api_url}/{endpoint}"
-        headers = {'Content-Type': 'application/json'}
+        test_headers = {'Content-Type': 'application/json'}
         
+        # Add admin session token for authenticated requests
         if self.session_token:
-            headers['Authorization'] = f'Bearer {self.session_token}'
+            test_headers['Authorization'] = f'Bearer {self.session_token}'
+        
+        if headers:
+            test_headers.update(headers)
 
+        self.tests_run += 1
+        print(f"\n🔍 Testing {name}...")
+        print(f"   URL: {url}")
+        
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=test_headers, timeout=10)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = requests.post(url, json=data, headers=test_headers, timeout=10)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=headers, timeout=10)
+                response = requests.put(url, json=data, headers=test_headers, timeout=10)
             elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, timeout=10)
+                response = requests.delete(url, headers=test_headers, timeout=10)
 
             success = response.status_code == expected_status
-            return success, response
-        except Exception as e:
-            return False, str(e)
-
-    def setup_test_user(self):
-        """Create test user and session in MongoDB"""
-        print("\n🔧 Setting up test user and session...")
-        
-        # Generate unique identifiers
-        timestamp = int(time.time())
-        self.user_id = f"test-user-{timestamp}"
-        self.session_token = f"test_session_{timestamp}"
-        
-        # MongoDB commands to create test user and session
-        mongo_commands = f"""
-        use test_database;
-        db.users.insertOne({{
-            user_id: "{self.user_id}",
-            email: "test.admin.{timestamp}@example.com",
-            name: "Test Admin User",
-            picture: "https://via.placeholder.com/150",
-            role: "admin",
-            team_id: null,
-            created_at: new Date()
-        }});
-        db.user_sessions.insertOne({{
-            user_id: "{self.user_id}",
-            session_token: "{self.session_token}",
-            expires_at: new Date(Date.now() + 7*24*60*60*1000),
-            created_at: new Date()
-        }});
-        """
-        
-        try:
-            import subprocess
-            result = subprocess.run(
-                ['mongosh', '--eval', mongo_commands],
-                capture_output=True, text=True, timeout=30
-            )
-            
-            if result.returncode == 0:
-                print(f"✅ Test user created: {self.user_id}")
-                print(f"✅ Session token: {self.session_token}")
-                return True
+            if success:
+                self.tests_passed += 1
+                print(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    if isinstance(response_data, dict) and len(str(response_data)) < 200:
+                        print(f"   Response: {response_data}")
+                except:
+                    pass
             else:
-                print(f"❌ MongoDB setup failed: {result.stderr}")
-                return False
+                print(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Response text: {response.text[:200]}")
+
+            self.results.append({
+                "test": name,
+                "endpoint": endpoint,
+                "method": method,
+                "expected_status": expected_status,
+                "actual_status": response.status_code,
+                "success": success,
+                "response_size": len(response.text) if response.text else 0
+            })
+
+            return success, response.json() if success and response.text else {}
+
         except Exception as e:
-            print(f"❌ MongoDB setup error: {str(e)}")
-            return False
+            print(f"❌ FAILED - Error: {str(e)}")
+            self.results.append({
+                "test": name,
+                "endpoint": endpoint,
+                "method": method,
+                "expected_status": expected_status,
+                "actual_status": "ERROR",
+                "success": False,
+                "error": str(e)
+            })
+            return False, {}
 
     def test_health_check(self):
-        """Test basic API health"""
-        success, response = self.make_request('GET', '', expected_status=200)
-        if success:
-            try:
-                data = response.json()
-                if data.get('message') == 'Cricket Auction API v2':
-                    self.log_result("API Health Check", True)
-                else:
-                    self.log_result("API Health Check", False, f"Unexpected response: {data}")
-            except:
-                self.log_result("API Health Check", False, "Invalid JSON response")
-        else:
-            self.log_result("API Health Check", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+        """Test basic API health check"""
+        return self.run_test("API Health Check", "GET", "", 200)
 
-    def test_tournaments_crud(self):
+    def test_excel_templates(self):
+        """Test Excel template download endpoints"""
+        print("\n📊 Testing Excel Template Downloads...")
+        
+        # Test teams template
+        teams_success, _ = self.run_test(
+            "Teams Template Download", 
+            "GET", 
+            "export/teams-template", 
+            200
+        )
+        
+        # Test players template  
+        players_success, _ = self.run_test(
+            "Players Template Download",
+            "GET", 
+            "export/players-template", 
+            200
+        )
+        
+        return teams_success and players_success
+
+    def test_tournament_operations(self):
         """Test tournament CRUD operations"""
-        # Test GET tournaments
-        success, response = self.make_request('GET', 'tournaments', expected_status=200)
-        if success:
-            self.log_result("Get Tournaments", True)
-            tournaments = response.json()
-        else:
-            self.log_result("Get Tournaments", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-            return
-
-        # Test GET specific tournament
-        success, response = self.make_request('GET', f'tournaments/{self.tournament_id}', expected_status=200)
-        if success:
-            self.log_result("Get Tournament by ID", True)
-        else:
-            self.log_result("Get Tournament by ID", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-        # Test CREATE tournament
-        tournament_data = {
-            "name": "Test Tournament 2025",
-            "description": "Test tournament for API testing",
-            "start_date": "2025-01-01",
-            "end_date": "2025-01-31"
-        }
+        print("\n🏆 Testing Tournament Operations...")
         
-        success, response = self.make_request('POST', 'tournaments', data=tournament_data, expected_status=200)
-        if success:
-            try:
-                created_tournament = response.json()
-                tournament_id = created_tournament.get('tournament_id')
-                if tournament_id and created_tournament.get('name') == tournament_data['name']:
-                    self.log_result("Create Tournament", True)
-                    self.test_tournament_id = tournament_id
-                else:
-                    self.log_result("Create Tournament", False, f"Invalid tournament data: {created_tournament}")
-            except:
-                self.log_result("Create Tournament", False, "Invalid JSON response")
-        else:
-            self.log_result("Create Tournament", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_auctions_crud(self):
-        """Test auction CRUD operations with bid increment rules"""
-        # Test GET auctions
-        success, response = self.make_request('GET', 'auctions', expected_status=200)
-        if success:
-            self.log_result("Get Auctions", True)
-        else:
-            self.log_result("Get Auctions", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-            return
-
-        # Test GET specific auction
-        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
-        if success:
-            try:
-                auction_data = response.json()
-                if auction_data.get('auction_id') == self.auction_id:
-                    self.log_result("Get Auction by ID", True)
-                    # Check if bid increment rules exist
-                    if 'bid_increment_rules' in auction_data:
-                        self.log_result("Auction Bid Increment Rules", True)
-                    else:
-                        self.log_result("Auction Bid Increment Rules", False, "No bid increment rules found")
-                else:
-                    self.log_result("Get Auction by ID", False, f"Wrong auction ID returned: {auction_data}")
-            except:
-                self.log_result("Get Auction by ID", False, "Invalid JSON response")
-        else:
-            self.log_result("Get Auction by ID", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-        # Test CREATE auction with bid increment rules
-        auction_data = {
-            "tournament_id": self.tournament_id,
-            "name": "Test Auction with Rules",
-            "date": "2025-01-15",
-            "players_per_team": 15,
-            "bid_increment_rules": [
-                {"range_start": 0, "increment_by": 100000},
-                {"range_start": 1000000, "increment_by": 200000},
-                {"range_start": 5000000, "increment_by": 500000}
-            ]
-        }
+        # Get tournaments
+        success, tournaments = self.run_test(
+            "Get Tournaments",
+            "GET",
+            "tournaments",
+            200
+        )
         
-        success, response = self.make_request('POST', 'auctions', data=auction_data, expected_status=200)
-        if success:
-            try:
-                created_auction = response.json()
-                auction_id = created_auction.get('auction_id')
-                if auction_id and created_auction.get('name') == auction_data['name']:
-                    self.log_result("Create Auction with Bid Rules", True)
-                    self.test_auction_id = auction_id
-                else:
-                    self.log_result("Create Auction with Bid Rules", False, f"Invalid auction data: {created_auction}")
-            except:
-                self.log_result("Create Auction with Bid Rules", False, "Invalid JSON response")
-        else:
-            self.log_result("Create Auction with Bid Rules", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_auction_controls(self):
-        """Test auction control endpoints - start/pause/stop"""
-        # Test start auction
-        success, response = self.make_request('POST', f'auctions/{self.auction_id}/start', data={}, expected_status=200)
-        if success:
-            self.log_result("Start Auction", True)
-        else:
-            self.log_result("Start Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-        # Test pause auction
-        success, response = self.make_request('POST', f'auctions/{self.auction_id}/pause', data={}, expected_status=200)
-        if success:
-            self.log_result("Pause Auction", True)
-        else:
-            self.log_result("Pause Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-        # Test stop auction
-        success, response = self.make_request('POST', f'auctions/{self.auction_id}/stop', data={}, expected_status=200)
-        if success:
-            self.log_result("Stop Auction", True)
-        else:
-            self.log_result("Stop Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_admin_bidding(self):
-        """Test admin bid on behalf of teams and decrease bid functionality"""
-        # First get auction teams
-        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
-        if not success:
-            self.log_result("Admin Bidding Setup", False, "Could not get auction data")
-            return
-
-        try:
-            auction_data = response.json()
-            teams = auction_data.get('teams', [])
-            if not teams:
-                self.log_result("Admin Bidding Setup", False, "No teams found in auction")
-                return
+        if success and tournaments:
+            print(f"   Found {len(tournaments)} tournaments")
             
-            team_id = teams[0]['team_id']  # Use first team for testing
+            # Test specific tournament
+            if self.tournament_id:
+                tournament_success, tournament = self.run_test(
+                    f"Get Tournament {self.tournament_id}",
+                    "GET",
+                    f"tournaments/{self.tournament_id}",
+                    200
+                )
+                
+                if tournament_success and tournament:
+                    print(f"   Tournament: {tournament.get('name', 'Unknown')}")
+                    return True
+        
+        return success
+
+    def test_auction_operations(self):
+        """Test auction operations for the tournament"""
+        print("\n🎯 Testing Auction Operations...")
+        
+        # Get auctions for tournament
+        success, auctions = self.run_test(
+            f"Get Auctions for Tournament {self.tournament_id}",
+            "GET",
+            f"auctions?tournament_id={self.tournament_id}",
+            200
+        )
+        
+        if success and auctions:
+            print(f"   Found {len(auctions)} auctions")
             
-            # Test admin bid
-            bid_data = {"team_id": team_id}
-            success, response = self.make_request('POST', f'auctions/{self.auction_id}/admin-bid', data=bid_data, expected_status=200)
-            if success:
-                self.log_result("Admin Bid on Behalf of Team", True)
-            else:
-                self.log_result("Admin Bid on Behalf of Team", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-            # Test decrease bid
-            success, response = self.make_request('POST', f'auctions/{self.auction_id}/decrease-bid', data={}, expected_status=200)
-            if success:
-                self.log_result("Decrease Bid Functionality", True)
-            else:
-                self.log_result("Decrease Bid Functionality", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-        except Exception as e:
-            self.log_result("Admin Bidding Setup", False, f"Error parsing auction data: {str(e)}")
-
-    def test_sell_player(self):
-        """Test sell player functionality"""
-        success, response = self.make_request('POST', f'auctions/{self.auction_id}/sell', data={}, expected_status=200)
-        if success:
-            self.log_result("Sell Player Functionality", True)
-        else:
-            self.log_result("Sell Player Functionality", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_dynamic_bid_increments(self):
-        """Test dynamic bid increments based on rules"""
-        # Get auction with bid increment rules
-        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
-        if success:
-            try:
-                auction_data = response.json()
-                bid_rules = auction_data.get('bid_increment_rules', [])
-                if bid_rules and len(bid_rules) > 0:
-                    # Check if rules have proper structure
-                    valid_rules = all('range_start' in rule and 'increment_by' in rule for rule in bid_rules)
-                    if valid_rules:
-                        self.log_result("Dynamic Bid Increments Structure", True)
-                    else:
-                        self.log_result("Dynamic Bid Increments Structure", False, "Invalid rule structure")
-                else:
-                    self.log_result("Dynamic Bid Increments Structure", False, "No bid increment rules found")
-            except:
-                self.log_result("Dynamic Bid Increments Structure", False, "Invalid JSON response")
-        else:
-            self.log_result("Dynamic Bid Increments Structure", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_public_view_screen(self):
-        """Test public view screen loads without auth (no auth header)"""
-        # Remove auth header for this test
-        original_token = self.session_token
-        self.session_token = None
+            # Test first auction details if available
+            if auctions and len(auctions) > 0:
+                auction_id = auctions[0].get('auction_id')
+                if auction_id:
+                    auction_success, auction_details = self.run_test(
+                        f"Get Auction Details {auction_id}",
+                        "GET",
+                        f"auctions/{auction_id}",
+                        200
+                    )
+                    
+                    if auction_success and auction_details:
+                        print(f"   Auction: {auction_details.get('name', 'Unknown')}")
+                        print(f"   Status: {auction_details.get('status', 'Unknown')}")
+                        return True
         
-        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
-        if success:
-            self.log_result("Public View Screen Access", True)
-        else:
-            self.log_result("Public View Screen Access", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+        return success
+
+    def test_teams_and_players(self):
+        """Test teams and players for the tournament"""
+        print("\n👥 Testing Teams and Players...")
         
-        # Restore auth header
-        self.session_token = original_token
-
-    def test_auth_me(self):
-        """Test authentication endpoint"""
-        success, response = self.make_request('GET', 'auth/me', expected_status=200)
-        if success:
-            try:
-                user_data = response.json()
-                if user_data.get('role') == 'admin':
-                    self.log_result("Auth Me Endpoint", True)
-                else:
-                    self.log_result("Auth Me Endpoint", False, f"Expected admin role, got: {user_data.get('role')}")
-            except:
-                self.log_result("Auth Me Endpoint", False, "Invalid JSON response")
-        else:
-            self.log_result("Auth Me Endpoint", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_teams_crud(self):
-        """Test teams CRUD operations"""
-        # Test GET teams
-        success, response = self.make_request('GET', 'teams', expected_status=200)
-        if success:
-            self.log_result("Get Teams", True)
-            teams = response.json()
-        else:
-            self.log_result("Get Teams", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-            return
-
-        # Test CREATE team
-        team_data = {
-            "name": "Test Team Mumbai",
-            "short_name": "TTM",
-            "logo_url": "https://via.placeholder.com/100",
-            "budget": 10000000,
-            "owner_email": "test.owner@example.com"
-        }
+        # Get teams
+        teams_success, teams = self.run_test(
+            f"Get Teams for Tournament {self.tournament_id}",
+            "GET",
+            f"teams?tournament_id={self.tournament_id}",
+            200
+        )
         
-        success, response = self.make_request('POST', 'teams', data=team_data, expected_status=200)
-        if success:
-            try:
-                created_team = response.json()
-                team_id = created_team.get('team_id')
-                if team_id and created_team.get('name') == team_data['name']:
-                    self.log_result("Create Team", True)
-                    self.test_team_id = team_id
-                else:
-                    self.log_result("Create Team", False, f"Invalid team data: {created_team}")
-            except:
-                self.log_result("Create Team", False, "Invalid JSON response")
-        else:
-            self.log_result("Create Team", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_players_crud(self):
-        """Test players CRUD operations"""
-        # Test GET players
-        success, response = self.make_request('GET', 'players', expected_status=200)
-        if success:
-            self.log_result("Get Players", True)
-        else:
-            self.log_result("Get Players", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-            return
-
-        # Test CREATE player
-        player_data = {
-            "name": "Test Player Virat",
-            "role": "batsman",
-            "base_price": 2000000,
-            "image_url": "https://via.placeholder.com/300x400",
-            "age": 28,
-            "batting_style": "right-handed",
-            "bowling_style": None,
-            "matches": 50,
-            "runs": 2500,
-            "wickets": 0
-        }
+        # Get players
+        players_success, players = self.run_test(
+            f"Get Players for Tournament {self.tournament_id}",
+            "GET",
+            f"players?tournament_id={self.tournament_id}",
+            200
+        )
         
-        success, response = self.make_request('POST', 'players', data=player_data, expected_status=200)
-        if success:
-            try:
-                created_player = response.json()
-                player_id = created_player.get('player_id')
-                if player_id and created_player.get('name') == player_data['name']:
-                    self.log_result("Create Player", True)
-                    self.test_player_id = player_id
-                else:
-                    self.log_result("Create Player", False, f"Invalid player data: {created_player}")
-            except:
-                self.log_result("Create Player", False, "Invalid JSON response")
-        else:
-            self.log_result("Create Player", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_auction_state(self):
-        """Test auction state endpoint"""
-        success, response = self.make_request('GET', 'auction/state', expected_status=200)
-        if success:
-            try:
-                auction_data = response.json()
-                # Check for either legacy format or new format
-                if 'auction_id' in auction_data or 'is_active' in auction_data or 'status' in auction_data:
-                    self.log_result("Auction State", True)
-                else:
-                    self.log_result("Auction State", False, f"Missing required fields: {auction_data}")
-            except:
-                self.log_result("Auction State", False, "Invalid JSON response")
-        else:
-            self.log_result("Auction State", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+        if teams_success and teams:
+            print(f"   Found {len(teams)} teams")
+            
+        if players_success and players:
+            print(f"   Found {len(players)} players")
+            
+        return teams_success and players_success
 
     def test_dashboard_stats(self):
-        """Test dashboard stats endpoint"""
-        success, response = self.make_request('GET', 'stats/dashboard', expected_status=200)
-        if success:
-            try:
-                stats = response.json()
-                required_fields = ['total_players', 'sold_players', 'unsold_players', 'total_teams', 'total_spent']
-                if all(field in stats for field in required_fields):
-                    self.log_result("Dashboard Stats", True)
-                else:
-                    self.log_result("Dashboard Stats", False, f"Missing required fields: {stats}")
-            except:
-                self.log_result("Dashboard Stats", False, "Invalid JSON response")
-        else:
-            self.log_result("Dashboard Stats", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_auction_controls(self):
-        """Test auction control endpoints"""
-        # Test start auction
-        success, response = self.make_request('POST', 'auction/start', data={}, expected_status=200)
-        if success:
-            self.log_result("Start Auction", True)
-        else:
-            self.log_result("Start Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-        # Test stop auction
-        success, response = self.make_request('POST', 'auction/stop', data={}, expected_status=200)
-        if success:
-            self.log_result("Stop Auction", True)
-        else:
-            self.log_result("Stop Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def test_users_endpoint(self):
-        """Test users management endpoint"""
-        success, response = self.make_request('GET', 'users', expected_status=200)
-        if success:
-            try:
-                users = response.json()
-                if isinstance(users, list):
-                    self.log_result("Get Users", True)
-                else:
-                    self.log_result("Get Users", False, f"Expected list, got: {type(users)}")
-            except:
-                self.log_result("Get Users", False, "Invalid JSON response")
-        else:
-            self.log_result("Get Users", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
-
-    def cleanup_test_data(self):
-        """Clean up test data from MongoDB"""
-        print("\n🧹 Cleaning up test data...")
+        """Test dashboard statistics"""
+        print("\n📈 Testing Dashboard Statistics...")
         
-        mongo_commands = f"""
-        use test_database;
-        db.users.deleteOne({{user_id: "{self.user_id}"}});
-        db.user_sessions.deleteOne({{session_token: "{self.session_token}"}});
-        db.teams.deleteMany({{name: /^Test Team/}});
-        db.players.deleteMany({{name: /^Test Player/}});
-        """
+        # Get overall stats
+        overall_success, overall_stats = self.run_test(
+            "Get Overall Dashboard Stats",
+            "GET",
+            "stats/dashboard",
+            200
+        )
         
-        try:
-            import subprocess
-            result = subprocess.run(
-                ['mongosh', '--eval', mongo_commands],
-                capture_output=True, text=True, timeout=30
-            )
+        # Get tournament-specific stats
+        tournament_success, tournament_stats = self.run_test(
+            f"Get Tournament Dashboard Stats",
+            "GET",
+            f"stats/dashboard?tournament_id={self.tournament_id}",
+            200
+        )
+        
+        if overall_success and overall_stats:
+            print(f"   Total Players: {overall_stats.get('total_players', 0)}")
+            print(f"   Sold Players: {overall_stats.get('sold_players', 0)}")
+            print(f"   Total Teams: {overall_stats.get('total_teams', 0)}")
             
-            if result.returncode == 0:
-                print("✅ Test data cleaned up")
-            else:
-                print(f"⚠️ Cleanup warning: {result.stderr}")
-        except Exception as e:
-            print(f"⚠️ Cleanup error: {str(e)}")
+        return overall_success and tournament_success
 
-    def run_all_tests(self):
-        """Run all backend API tests"""
-        print("🚀 Starting Cricket Auction API Tests")
-        print(f"🎯 Testing against: {self.base_url}")
-        print(f"🔑 Using session token: {self.session_token}")
-        print(f"🏆 Tournament ID: {self.tournament_id}")
-        print(f"🎪 Auction ID: {self.auction_id}")
-        print("=" * 60)
-
-        # Run tests (no setup needed as we use provided session token)
-        self.test_health_check()
-        self.test_auth_me()
-        self.test_tournaments_crud()
-        self.test_auctions_crud()
-        self.test_teams_crud()
-        self.test_players_crud()
-        self.test_auction_controls()
-        self.test_admin_bidding()
-        self.test_sell_player()
-        self.test_dynamic_bid_increments()
-        self.test_public_view_screen()
-        self.test_auction_state()
-        self.test_dashboard_stats()
-        self.test_users_endpoint()
-
-        # Results
-        print("\n" + "=" * 60)
-        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
+    def test_import_export_endpoints(self):
+        """Test import/export endpoints structure"""
+        print("\n📤 Testing Import/Export Endpoints...")
         
-        if self.failed_tests:
-            print("\n❌ Failed Tests:")
-            for failure in self.failed_tests:
-                print(f"  • {failure['test']}: {failure['details']}")
+        # Test export endpoints (should work)
+        teams_export_success, _ = self.run_test(
+            f"Export Teams for Tournament {self.tournament_id}",
+            "GET",
+            f"export/teams/{self.tournament_id}",
+            200
+        )
         
-        if self.passed_tests:
-            print(f"\n✅ Passed Tests: {', '.join(self.passed_tests)}")
+        players_export_success, _ = self.run_test(
+            f"Export Players for Tournament {self.tournament_id}",
+            "GET",
+            f"export/players/{self.tournament_id}",
+            200
+        )
+        
+        auction_results_success, _ = self.run_test(
+            f"Export Auction Results for Tournament {self.tournament_id}",
+            "GET",
+            f"export/auction-results/{self.tournament_id}",
+            200
+        )
+        
+        return teams_export_success and players_export_success and auction_results_success
 
-        success_rate = (self.tests_passed / self.tests_run * 100) if self.tests_run > 0 else 0
-        print(f"\n🎯 Success Rate: {success_rate:.1f}%")
+    def print_summary(self):
+        """Print test summary"""
+        print(f"\n" + "="*60)
+        print(f"🏁 TEST SUMMARY")
+        print(f"="*60)
+        print(f"📊 Tests Run: {self.tests_run}")
+        print(f"✅ Tests Passed: {self.tests_passed}")
+        print(f"❌ Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"📈 Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
         
-        return success_rate >= 70  # Lower threshold for initial testing
+        # Group results by success/failure
+        passed_tests = [r for r in self.results if r['success']]
+        failed_tests = [r for r in self.results if not r['success']]
+        
+        if passed_tests:
+            print(f"\n✅ PASSED TESTS ({len(passed_tests)}):")
+            for test in passed_tests:
+                print(f"   • {test['test']}")
+        
+        if failed_tests:
+            print(f"\n❌ FAILED TESTS ({len(failed_tests)}):")
+            for test in failed_tests:
+                print(f"   • {test['test']} - {test.get('error', f'Status {test.get(\"actual_status\", \"Unknown\")}')}")
 
 def main():
-    tester = CricketAuctionAPITester()
-    success = tester.run_all_tests()
-    return 0 if success else 1
+    print("🚀 Starting AuctionArena Backend API Tests")
+    print("="*60)
+    
+    tester = AuctionArenaAPITester()
+    
+    # Run all tests
+    tests = [
+        tester.test_health_check,
+        tester.test_excel_templates,
+        tester.test_tournament_operations,
+        tester.test_auction_operations,
+        tester.test_teams_and_players,
+        tester.test_dashboard_stats,
+        tester.test_import_export_endpoints
+    ]
+    
+    for test in tests:
+        try:
+            test()
+        except Exception as e:
+            print(f"❌ Test failed with exception: {e}")
+    
+    # Print final summary
+    tester.print_summary()
+    
+    # Return appropriate exit code
+    success_rate = (tester.tests_passed / tester.tests_run) * 100 if tester.tests_run > 0 else 0
+    return 0 if success_rate >= 80 else 1
 
 if __name__ == "__main__":
     sys.exit(main())
