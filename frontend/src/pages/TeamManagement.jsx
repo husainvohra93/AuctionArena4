@@ -404,18 +404,53 @@ const TeamManagement = () => {
             </Select>
           </div>
 
+          {/* Select All Button */}
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSelectAll}
+              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+            >
+              {selectedTeams.length === filteredTeams.length && filteredTeams.length > 0 ? (
+                <>
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Deselect All
+                </>
+              ) : (
+                <>
+                  <Square className="w-4 h-4 mr-2" />
+                  Select All ({filteredTeams.length})
+                </>
+              )}
+            </Button>
+            {selectedTeams.length > 0 && (
+              <span className="text-sm text-slate-400">{selectedTeams.length} selected</span>
+            )}
+          </div>
+
           {/* Teams Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {filteredTeams.map((team, index) => (
               <Card 
                 key={team.team_id}
                 data-testid={`team-card-${team.team_id}`}
-                className="glass-card border-0 card-hover animate-fade-in-up"
+                className={`glass-card border-0 card-hover animate-fade-in-up ${selectedTeams.includes(team.team_id) ? 'ring-2 ring-blue-500' : ''}`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4">
+                    {/* Checkbox */}
+                    <div 
+                      className="cursor-pointer mr-3 mt-1"
+                      onClick={() => toggleSelectTeam(team.team_id)}
+                    >
+                      <Checkbox
+                        checked={selectedTeams.includes(team.team_id)}
+                        className="bg-slate-800 border-slate-600 data-[state=checked]:bg-blue-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4 flex-1">
                       {team.logo_url ? (
                         <img src={team.logo_url} alt={team.name} className="w-16 h-16 rounded-xl object-cover" />
                       ) : (
