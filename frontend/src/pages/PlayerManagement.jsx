@@ -257,16 +257,28 @@ const PlayerManagement = () => {
               <p className="text-slate-400 mt-1">{players.length} players registered</p>
             </div>
             
-            <Dialog open={dialogOpen} onOpenChange={(open) => {
-              setDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button data-testid="add-player-btn" className="btn-primary flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Player
+            <div className="flex gap-2">
+              {selectedPlayers.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                  className="bg-red-600 hover:bg-red-500"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete ({selectedPlayers.length})
                 </Button>
-              </DialogTrigger>
+              )}
+              
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button data-testid="add-player-btn" className="btn-primary flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Player
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-heading text-white">
