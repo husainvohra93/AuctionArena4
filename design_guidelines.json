@@ -1,0 +1,174 @@
+{
+  "identity": {
+    "name": "E1: The Anti-AI Designer",
+    "mission": "Create a high-stakes, 'Stadium Night' aesthetic for a Cricket Auction Portal that feels like a live TV broadcast, not a spreadsheet.",
+    "principles": [
+      "Fusion: Sports Broadcast x Fintech Dashboard",
+      "Emotion: Intensity, Precision, Adrenaline",
+      "Content: The Player is the Hero; The Bid is the Action",
+      "Contrast: Deepest Blacks vs. Neon Highlights"
+    ]
+  },
+  "typography": {
+    "fonts": {
+      "headings": {
+        "family": "Chivo, sans-serif",
+        "weights": ["700", "900"],
+        "usage": "Page titles, Player Names, Current Bid Amount",
+        "install_url": "https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&display=swap"
+      },
+      "body": {
+        "family": "Manrope, sans-serif",
+        "weights": ["400", "500", "600"],
+        "usage": "UI text, stats, tables, descriptions",
+        "install_url": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap"
+      },
+      "mono": {
+        "family": "JetBrains Mono, monospace",
+        "weights": ["400"],
+        "usage": "Timers, Budget Numbers, IDs",
+        "install_url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap"
+      }
+    },
+    "rules": [
+      "Headings must be TIGHT (tracking-tight).",
+      "Labels must be UPPERCASE + WIDE (tracking-widest text-xs).",
+      "Numbers (Prices/Budgets) must use tabular-nums for alignment."
+    ]
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": {
+        "default": "#020617",
+        "paper": "#0f172a",
+        "subtle": "#1e293b"
+      },
+      "primary": {
+        "main": "#3b82f6",
+        "hover": "#2563eb",
+        "foreground": "#ffffff"
+      },
+      "accent": {
+        "main": "#22c55e",
+        "glow": "0 0 20px rgba(34, 197, 94, 0.5)",
+        "text": "#4ade80"
+      },
+      "destructive": {
+        "main": "#ef4444",
+        "foreground": "#ffffff"
+      },
+      "text": {
+        "primary": "#f8fafc",
+        "secondary": "#94a3b8",
+        "muted": "#64748b"
+      },
+      "border": {
+        "default": "#1e293b",
+        "active": "#3b82f6"
+      }
+    },
+    "gradients": {
+      "hero": "linear-gradient(to bottom right, #020617, #1e1b4b)",
+      "glass": "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+      "glow_beam": "linear-gradient(90deg, transparent, #3b82f6, transparent)"
+    }
+  },
+  "layout": {
+    "grid_system": {
+      "dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "auction_room": "grid-cols-1 lg:grid-cols-12 gap-4 h-screen overflow-hidden"
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "section_gap": "gap-8",
+      "internal_padding": "p-6"
+    },
+    "strategies": [
+      "Use 'Control Room' layout for Auction Panel: Player Card (Left 8 cols) + Bidding Feed (Right 4 cols).",
+      "Use 'Bento Grid' for Admin Dashboard: Stats cards mixed with list views.",
+      "Always use 'w-full max-w-7xl mx-auto' for main containers to prevent stretching on ultra-wide screens."
+    ]
+  },
+  "components": {
+    "cards": {
+      "style": "glassmorphic",
+      "classes": "bg-slate-950/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-xl",
+      "hover": "hover:border-white/20 transition-all duration-300"
+    },
+    "buttons": {
+      "primary": "bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-transform active:scale-95",
+      "bid_action": "bg-green-600 hover:bg-green-500 text-white text-xl font-black py-4 px-8 rounded-full shadow-[0_0_30px_rgba(34,197,94,0.6)] animate-pulse",
+      "secondary": "bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2 px-4 rounded-lg border border-slate-700"
+    },
+    "inputs": {
+      "style": "minimal",
+      "classes": "bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder:text-slate-500 h-12"
+    },
+    "badges": {
+      "sold": "bg-red-500/20 text-red-400 border border-red-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
+      "unsold": "bg-slate-500/20 text-slate-400 border border-slate-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
+      "role": "bg-blue-500/20 text-blue-400 border border-blue-500/50 px-2 py-0.5 rounded text-[10px] font-mono uppercase"
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Add a subtle noise texture overlay to the body background (opacity 0.03) to kill the digital flatness.",
+    "lighting": "Use radial gradients behind the 'Hero Player' image to create a spotlight effect.",
+    "borders": "Use 1px borders with 10% opacity white for all containers. Do not rely on shadows alone in dark mode."
+  },
+  "images": {
+    "backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1750716413756-b66624b64ce4?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Stadium Night Lights",
+        "usage": "Login Page Background, Auction Room Backdrop (dimmed)"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1728659964407-ed9a942ec2de?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Abstract Dark Texture",
+        "usage": "Dashboard Header Background"
+      }
+    ],
+    "players": [
+      {
+        "url": "https://images.unsplash.com/photo-1583072728920-4ed8c72cbc01?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Cricket Batter Action",
+        "usage": "Player Card Example 1"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1750716413349-df33aeca8429?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Cricket Bowler",
+        "usage": "Player Card Example 2"
+      }
+    ],
+    "logos": [
+      {
+        "url": "https://images.unsplash.com/photo-1709873582570-4f17d43921d4?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Team Shield Logo 1",
+        "usage": "Team Logo Placeholder"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1728555864830-499254793e04?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Team Jersey Logo",
+        "usage": "Team Logo Placeholder"
+      }
+    ]
+  },
+  "motion": {
+    "library": "framer-motion",
+    "instructions": [
+      "Animate the 'Current Bid' number when it changes (count-up effect).",
+      "Use 'AnimatePresence' for the Player Card transition when a new player comes up for auction.",
+      "Stagger the entrance of dashboard cards."
+    ]
+  },
+  "universal_guidelines": [
+    "NEVER use 'Inter' for headings. Use 'Chivo'.",
+    "NEVER use pure black (#000000). Use Slate-950 (#020617).",
+    "ALWAYS add 'data-testid' to interactive elements.",
+    "Use 'sonner' for toast notifications.",
+    "Use 'lucide-react' for icons.",
+    "Ensure all text has sufficient contrast (APCA standards)."
+  ],
+  "instructions_to_main_agent": "You are building a high-intensity Auction Portal. The user wants a 'Dark Theme'. Follow the 'Stadium Night' aesthetic. Use the provided image URLs for placeholders. Implement the 'Control Room' grid for the auction page. Use Shadcn components but override their styles to match the 'glassmorphic' look defined in the 'components' section."
+}
