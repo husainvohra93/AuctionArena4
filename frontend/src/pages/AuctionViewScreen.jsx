@@ -63,7 +63,7 @@ const AuctionViewScreen = () => {
             <Trophy className="w-10 h-10 text-yellow-400" />
             <div>
               <h1 className="font-heading text-2xl font-black tracking-tight">
-                CRICKET<span className="text-blue-500">MART</span>
+                AUCTION<span className="text-blue-500">ARENA</span>
               </h1>
               <p className="text-slate-400 text-sm">{auction?.name}</p>
             </div>
