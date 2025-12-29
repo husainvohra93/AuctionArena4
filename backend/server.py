@@ -484,11 +484,37 @@ async def get_auction(auction_id: str):
         {"_id": 0}
     ).to_list(100)
     
+    # Get unsold players (first auction) and previously unsold players (re-auction pool)
+    unsold_players = await db.players.find(
+        {"tournament_id": auction["tournament_id"], "status": "unsold", "was_unsold": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Re-auction pool (players marked unsold in previous rounds)
+    reauction_pool = await db.players.find(
+        {"tournament_id": auction["tournament_id"], "status": "unsold", "was_unsold": True},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Check if there was a recent sale for confetti trigger
+    last_sold = auction.get("last_sold_player_id")
+    last_sold_time = auction.get("last_sold_time")
+    show_confetti = False
+    if last_sold_time:
+        if isinstance(last_sold_time, str):
+            last_sold_time = datetime.fromisoformat(last_sold_time.replace('Z', '+00:00'))
+        time_diff = (datetime.now(timezone.utc) - last_sold_time).total_seconds()
+        show_confetti = time_diff < 5  # Show confetti for 5 seconds after sale
+    
     return {
         **auction,
         "current_player": current_player,
         "current_bidder_team": current_bidder_team,
-        "teams": teams
+        "teams": teams,
+        "unsold_players": unsold_players,
+        "reauction_pool": reauction_pool,
+        "show_confetti": show_confetti,
+        "last_sold_player_id": last_sold
     }
 
 @api_router.put("/auctions/{auction_id}")
@@ -502,7 +528,9 @@ async def update_auction(auction_id: str, auction: AuctionCreate, request: Reque
             "name": auction.name,
             "date": auction.date,
             "players_per_team": auction.players_per_team,
-            "bid_increment_rules": auction.bid_increment_rules
+            "bid_increment_rules": auction.bid_increment_rules,
+            "pick_mode": auction.pick_mode,
+            "random_pick_delay": auction.random_pick_delay
         }}
     )
     
