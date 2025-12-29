@@ -1203,7 +1203,8 @@ async def export_teams_template():
         'name': ['Mumbai Warriors', 'Delhi Kings'],
         'short_name': ['MW', 'DK'],
         'budget': [10000000, 10000000],
-        'owner_email': ['owner1@example.com', 'owner2@example.com']
+        'owner_email': ['owner1@example.com', 'owner2@example.com'],
+        'logo_url': ['https://example.com/logo1.png', '']
     })
     
     output = io.BytesIO()
@@ -1229,7 +1230,8 @@ async def export_players_template():
         'bowling_style': ['', 'right-arm-spin', ''],
         'matches': [50, 60, 100],
         'runs': [2000, 2500, 3000],
-        'wickets': [0, 10, 0]
+        'wickets': [0, 10, 0],
+        'image_url': ['https://drive.google.com/uc?export=view&id=YOUR_FILE_ID', '', '']
     })
     
     output = io.BytesIO()
