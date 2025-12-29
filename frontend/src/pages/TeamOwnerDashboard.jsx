@@ -223,6 +223,37 @@ const TeamOwnerDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Export Section */}
+          <Card className="glass-card border-0 mb-8">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-heading text-white text-lg flex items-center gap-2">
+                <Download className="w-5 h-5 text-blue-400" />
+                Download Team Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <p className="text-slate-400 text-sm mb-4">Export your team details, squad information, and auction data</p>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(`${API}/team-owner/export/excel`, '_blank')}
+                  className="border-green-500/50 text-green-400 hover:bg-green-500/10"
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Download Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(`${API}/team-owner/export/pdf`, '_blank')}
+                  className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Download PDF Report
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Squad Composition */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card className="glass-card border-0">
