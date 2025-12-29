@@ -32,6 +32,7 @@ const AuctionManagement = () => {
     name: '',
     date: '',
     players_per_team: 15,
+    pick_mode: 'manual',
     bid_increment_rules: [
       { range_start: 0, increment_by: 100 },
       { range_start: 1000, increment_by: 200 },
@@ -89,6 +90,7 @@ const AuctionManagement = () => {
       name: auction.name,
       date: auction.date || '',
       players_per_team: auction.players_per_team || 15,
+      pick_mode: auction.pick_mode || 'manual',
       bid_increment_rules: auction.bid_increment_rules?.length > 0 
         ? auction.bid_increment_rules 
         : [{ range_start: 0, increment_by: 100 }]
@@ -114,6 +116,7 @@ const AuctionManagement = () => {
       name: '',
       date: '',
       players_per_team: 15,
+      pick_mode: 'manual',
       bid_increment_rules: [
         { range_start: 0, increment_by: 100 },
         { range_start: 1000, increment_by: 200 },
