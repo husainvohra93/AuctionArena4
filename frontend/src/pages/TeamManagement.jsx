@@ -238,14 +238,54 @@ const TeamManagement = () => {
                       className="bg-slate-800 border-slate-700 text-white"
                     />
                   </div>
-                  <div>
-                    <Label className="text-slate-300">Logo URL</Label>
-                    <Input
-                      value={formData.logo_url}
-                      onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                      placeholder="https://..."
-                      className="bg-slate-800 border-slate-700 text-white"
-                    />
+                  <div className="col-span-2">
+                    <Label className="text-slate-300">Team Logo</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        value={formData.logo_url}
+                        onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                        placeholder="https://... or upload below"
+                        className="bg-slate-800 border-slate-700 text-white flex-1"
+                      />
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            
+                            setUploading(true);
+                            const uploadData = new FormData();
+                            uploadData.append('file', file);
+                            
+                            try {
+                              const res = await axios.post(`${API}/upload/image`, uploadData, {
+                                withCredentials: true,
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                              });
+                              setFormData({ ...formData, logo_url: `${BACKEND_URL}${res.data.url}` });
+                              toast.success('Logo uploaded!');
+                            } catch (err) {
+                              toast.error(err.response?.data?.detail || 'Upload failed');
+                            } finally {
+                              setUploading(false);
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        <Button type="button" variant="outline" className="border-slate-700 text-slate-300" disabled={uploading}>
+                          <Upload className="w-4 h-4 mr-1" />
+                          {uploading ? '...' : 'Upload'}
+                        </Button>
+                      </label>
+                    </div>
+                    {formData.logo_url && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <img src={formData.logo_url} alt="Preview" className="w-12 h-12 rounded object-cover" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <Label className="text-slate-300">Budget (Points) *</Label>
