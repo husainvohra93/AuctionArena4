@@ -254,6 +254,342 @@ class AuctionArenaAPITester:
         
         return teams_export_success and players_export_success and auction_results_success
 
+    def test_auction_pick_mode(self):
+        """Test auction pick_mode field functionality"""
+        print("\n🎲 Testing Auction Pick Mode...")
+        
+        # Create auction with manual pick mode
+        manual_auction_data = {
+            "tournament_id": self.tournament_id,
+            "name": "Test Manual Auction",
+            "pick_mode": "manual",
+            "random_pick_delay": 5
+        }
+        
+        manual_success, manual_auction = self.run_test(
+            "Create Auction with Manual Pick Mode",
+            "POST",
+            "auctions",
+            200,
+            manual_auction_data
+        )
+        
+        if not manual_success:
+            return False
+            
+        manual_auction_id = manual_auction.get('auction_id')
+        
+        # Verify pick_mode is returned in GET
+        get_success, auction_details = self.run_test(
+            f"Get Auction Details - Check Pick Mode",
+            "GET",
+            f"auctions/{manual_auction_id}",
+            200
+        )
+        
+        if get_success and auction_details:
+            pick_mode = auction_details.get('pick_mode')
+            print(f"   Pick Mode: {pick_mode}")
+            if pick_mode != "manual":
+                print(f"❌ Expected pick_mode 'manual', got '{pick_mode}'")
+                return False
+        
+        # Create auction with random pick mode
+        random_auction_data = {
+            "tournament_id": self.tournament_id,
+            "name": "Test Random Auction",
+            "pick_mode": "random",
+            "random_pick_delay": 3
+        }
+        
+        random_success, random_auction = self.run_test(
+            "Create Auction with Random Pick Mode",
+            "POST",
+            "auctions",
+            200,
+            random_auction_data
+        )
+        
+        if random_success and random_auction:
+            random_auction_id = random_auction.get('auction_id')
+            
+            # Verify random pick mode
+            get_random_success, random_details = self.run_test(
+                f"Get Random Auction Details - Check Pick Mode",
+                "GET",
+                f"auctions/{random_auction_id}",
+                200
+            )
+            
+            if get_random_success and random_details:
+                pick_mode = random_details.get('pick_mode')
+                if pick_mode != "random":
+                    print(f"❌ Expected pick_mode 'random', got '{pick_mode}'")
+                    return False
+        
+        return manual_success and random_success
+
+    def test_unsold_pool_logic(self):
+        """Test unsold pool separation and was_unsold flag"""
+        print("\n🔄 Testing Unsold Pool Logic...")
+        
+        # Get an auction to work with
+        success, auctions = self.run_test(
+            f"Get Auctions for Unsold Pool Test",
+            "GET",
+            f"auctions?tournament_id={self.tournament_id}",
+            200
+        )
+        
+        if not success or not auctions:
+            print("❌ No auctions found for testing")
+            return False
+            
+        auction_id = auctions[0].get('auction_id')
+        
+        # Get auction details to check pools
+        pool_success, auction_details = self.run_test(
+            f"Get Auction Details - Check Pools",
+            "GET",
+            f"auctions/{auction_id}",
+            200
+        )
+        
+        if pool_success and auction_details:
+            unsold_players = auction_details.get('unsold_players', [])
+            reauction_pool = auction_details.get('reauction_pool', [])
+            
+            print(f"   Fresh Pool (unsold_players): {len(unsold_players)} players")
+            print(f"   Re-auction Pool (reauction_pool): {len(reauction_pool)} players")
+            
+            # Check if pools are properly separated
+            if 'unsold_players' not in auction_details:
+                print("❌ Missing 'unsold_players' field in auction response")
+                return False
+                
+            if 'reauction_pool' not in auction_details:
+                print("❌ Missing 'reauction_pool' field in auction response")
+                return False
+                
+            # Test marking a player as unsold (if there's a current player)
+            current_player_id = auction_details.get('current_player_id')
+            if current_player_id:
+                unsold_success, _ = self.run_test(
+                    f"Mark Player as Unsold",
+                    "POST",
+                    f"auctions/{auction_id}/unsold",
+                    200
+                )
+                
+                if unsold_success:
+                    # Check if player moved to re-auction pool
+                    after_unsold_success, after_details = self.run_test(
+                        f"Check Pools After Marking Unsold",
+                        "GET",
+                        f"auctions/{auction_id}",
+                        200
+                    )
+                    
+                    if after_unsold_success and after_details:
+                        new_reauction_pool = after_details.get('reauction_pool', [])
+                        print(f"   Re-auction Pool after unsold: {len(new_reauction_pool)} players")
+                        
+                        # Check if the player has was_unsold flag
+                        for player in new_reauction_pool:
+                            if player.get('player_id') == current_player_id:
+                                if not player.get('was_unsold'):
+                                    print(f"❌ Player {current_player_id} missing was_unsold flag")
+                                    return False
+                                break
+                
+                return unsold_success
+        
+        return pool_success
+
+    def test_random_pick_functionality(self):
+        """Test random pick player endpoint"""
+        print("\n🎲 Testing Random Pick Functionality...")
+        
+        # Get an auction to work with
+        success, auctions = self.run_test(
+            f"Get Auctions for Random Pick Test",
+            "GET",
+            f"auctions?tournament_id={self.tournament_id}",
+            200
+        )
+        
+        if not success or not auctions:
+            print("❌ No auctions found for testing")
+            return False
+            
+        auction_id = auctions[0].get('auction_id')
+        
+        # Test random pick from fresh pool
+        fresh_pick_success, fresh_result = self.run_test(
+            f"Random Pick from Fresh Pool",
+            "POST",
+            f"auctions/{auction_id}/random-pick",
+            200
+        )
+        
+        if fresh_pick_success and fresh_result:
+            current_player = fresh_result.get('current_player')
+            if current_player:
+                print(f"   Picked player: {current_player.get('name', 'Unknown')}")
+                
+                # Clear the current player by marking as unsold to test re-auction pick
+                unsold_success, _ = self.run_test(
+                    f"Mark Random Picked Player as Unsold",
+                    "POST",
+                    f"auctions/{auction_id}/unsold",
+                    200
+                )
+                
+                if unsold_success:
+                    # Test random pick from re-auction pool
+                    reauction_pick_success, reauction_result = self.run_test(
+                        f"Random Pick from Re-auction Pool",
+                        "POST",
+                        f"auctions/{auction_id}/random-pick?from_reauction=true",
+                        200
+                    )
+                    
+                    if reauction_pick_success and reauction_result:
+                        reauction_player = reauction_result.get('current_player')
+                        if reauction_player:
+                            print(f"   Re-auction picked player: {reauction_player.get('name', 'Unknown')}")
+                        return True
+        
+        return fresh_pick_success
+
+    def test_confetti_trigger(self):
+        """Test confetti trigger on player sale"""
+        print("\n🎉 Testing Confetti Trigger...")
+        
+        # Get an auction to work with
+        success, auctions = self.run_test(
+            f"Get Auctions for Confetti Test",
+            "GET",
+            f"auctions?tournament_id={self.tournament_id}",
+            200
+        )
+        
+        if not success or not auctions:
+            print("❌ No auctions found for testing")
+            return False
+            
+        auction_id = auctions[0].get('auction_id')
+        
+        # Get auction details to check initial state
+        initial_success, initial_details = self.run_test(
+            f"Get Initial Auction State",
+            "GET",
+            f"auctions/{auction_id}",
+            200
+        )
+        
+        if initial_success and initial_details:
+            show_confetti_before = initial_details.get('show_confetti', False)
+            last_sold_before = initial_details.get('last_sold_player_id')
+            
+            print(f"   Initial show_confetti: {show_confetti_before}")
+            print(f"   Initial last_sold_player_id: {last_sold_before}")
+            
+            # Check if there's a current player to sell
+            current_player_id = initial_details.get('current_player_id')
+            current_bidder_id = initial_details.get('current_bidder_id')
+            
+            if current_player_id and current_bidder_id:
+                # Sell the player
+                sell_success, sell_result = self.run_test(
+                    f"Sell Player to Trigger Confetti",
+                    "POST",
+                    f"auctions/{auction_id}/sell",
+                    200
+                )
+                
+                if sell_success and sell_result:
+                    show_confetti_after = sell_result.get('show_confetti', False)
+                    last_sold_after = sell_result.get('last_sold_player_id')
+                    
+                    print(f"   After sale show_confetti: {show_confetti_after}")
+                    print(f"   After sale last_sold_player_id: {last_sold_after}")
+                    
+                    # Verify confetti is triggered
+                    if not show_confetti_after:
+                        print("❌ show_confetti should be true after player sale")
+                        return False
+                        
+                    if last_sold_after != current_player_id:
+                        print(f"❌ last_sold_player_id should be {current_player_id}, got {last_sold_after}")
+                        return False
+                        
+                    return True
+            else:
+                print("   No current player with bidder to sell - confetti trigger test skipped")
+                return True  # Not a failure, just no data to test with
+        
+        return initial_success
+
+    def test_reset_auction_clears_was_unsold(self):
+        """Test that reset auction clears was_unsold flag"""
+        print("\n🔄 Testing Reset Auction Clears was_unsold Flag...")
+        
+        # Get an auction to work with
+        success, auctions = self.run_test(
+            f"Get Auctions for Reset Test",
+            "GET",
+            f"auctions?tournament_id={self.tournament_id}",
+            200
+        )
+        
+        if not success or not auctions:
+            print("❌ No auctions found for testing")
+            return False
+            
+        auction_id = auctions[0].get('auction_id')
+        
+        # Get players before reset
+        before_success, before_details = self.run_test(
+            f"Get Auction Before Reset",
+            "GET",
+            f"auctions/{auction_id}",
+            200
+        )
+        
+        if before_success and before_details:
+            reauction_pool_before = before_details.get('reauction_pool', [])
+            print(f"   Re-auction pool before reset: {len(reauction_pool_before)} players")
+            
+            # Reset the auction
+            reset_success, reset_result = self.run_test(
+                f"Reset Auction",
+                "POST",
+                f"auctions/{auction_id}/reset",
+                200
+            )
+            
+            if reset_success and reset_result:
+                reauction_pool_after = reset_result.get('reauction_pool', [])
+                print(f"   Re-auction pool after reset: {len(reauction_pool_after)} players")
+                
+                # Verify re-auction pool is empty after reset
+                if len(reauction_pool_after) > 0:
+                    print("❌ Re-auction pool should be empty after reset")
+                    return False
+                    
+                # Verify all players have was_unsold=false
+                all_players = reset_result.get('unsold_players', [])
+                for player in all_players:
+                    if player.get('was_unsold', False):
+                        print(f"❌ Player {player.get('name')} still has was_unsold=true after reset")
+                        return False
+                
+                print("✅ Reset successfully cleared was_unsold flags")
+                return True
+        
+        return before_success
+
     def print_summary(self):
         """Print test summary"""
         print(f"\n" + "="*60)
