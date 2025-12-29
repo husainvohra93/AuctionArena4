@@ -406,6 +406,17 @@ const PlayerManagement = () => {
                     <SelectItem value="wicket-keeper">Wicket-Keeper</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
+                  <SelectTrigger className="w-[180px] bg-slate-800 border-slate-700 text-white">
+                    <SelectValue placeholder="Tournament" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="all">All Tournaments</SelectItem>
+                    {tournaments.map((t) => (
+                      <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
