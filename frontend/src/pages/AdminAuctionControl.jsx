@@ -400,23 +400,63 @@ const AdminAuctionControl = () => {
 
             {/* Right - Player Pool & Teams (4 cols) */}
             <div className="col-span-4 flex flex-col gap-4 min-h-0">
-              {/* Player Pool */}
+              {/* Player Pool with Tabs */}
               <Card className="glass-card border-0 flex-1 min-h-0">
                 <CardHeader className="pb-2 flex-shrink-0">
-                  <CardTitle className="font-heading text-white text-sm flex items-center justify-between">
-                    <span>Player Pool</span>
-                    <span className="text-slate-400 font-normal">{unsoldPlayers.length} unsold</span>
-                  </CardTitle>
+                  <div className="flex items-center justify-between mb-2">
+                    <CardTitle className="font-heading text-white text-sm">Player Pool</CardTitle>
+                    {/* Random Pick Button */}
+                    {!auction?.current_player_id && isLive && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleRandomPick(activePoolTab === 'reauction')}
+                        className="bg-purple-600 hover:bg-purple-500 text-white text-xs"
+                        disabled={(activePoolTab === 'fresh' && unsoldPlayers.length === 0) || 
+                                  (activePoolTab === 'reauction' && reaucationPool.length === 0)}
+                      >
+                        <Shuffle className="w-3 h-3 mr-1" />
+                        Random
+                      </Button>
+                    )}
+                  </div>
+                  {/* Pool Tabs */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setActivePoolTab('fresh')}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        activePoolTab === 'fresh' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Fresh ({unsoldPlayers.length})
+                    </button>
+                    <button
+                      onClick={() => setActivePoolTab('reauction')}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        activePoolTab === 'reauction' 
+                          ? 'bg-orange-500 text-white' 
+                          : 'bg-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <RefreshCw className="w-3 h-3 inline mr-1" />
+                      Re-auction ({reaucationPool.length})
+                    </button>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-2">
                   <ScrollArea className="h-[30vh]">
                     <div className="space-y-1">
-                      {unsoldPlayers.map((player) => (
+                      {(activePoolTab === 'fresh' ? unsoldPlayers : reaucationPool).map((player) => (
                         <div
                           key={player.player_id}
                           data-testid={`pool-player-${player.player_id}`}
                           onClick={() => handleSetPlayer(player.player_id)}
-                          className="flex items-center gap-2 p-2 bg-slate-800/30 rounded-lg hover:bg-slate-800/50 cursor-pointer group"
+                          className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer group ${
+                            activePoolTab === 'reauction' 
+                              ? 'bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30' 
+                              : 'bg-slate-800/30 hover:bg-slate-800/50'
+                          }`}
                         >
                           <img
                             src={player.image_url || 'https://images.unsplash.com/photo-1583072728920-4ed8c72cbc01?w=50&h=50&fit=crop'}
@@ -427,9 +467,18 @@ const AdminAuctionControl = () => {
                             <p className="text-white text-sm font-medium truncate">{player.name}</p>
                             <p className="text-xs text-slate-500">{formatPrice(player.base_price)}</p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400" />
+                          <ChevronRight className={`w-4 h-4 ${
+                            activePoolTab === 'reauction' 
+                              ? 'text-orange-400 group-hover:text-orange-300' 
+                              : 'text-slate-600 group-hover:text-blue-400'
+                          }`} />
                         </div>
                       ))}
+                      {(activePoolTab === 'fresh' ? unsoldPlayers : reaucationPool).length === 0 && (
+                        <div className="text-center py-4 text-slate-500 text-sm">
+                          {activePoolTab === 'fresh' ? 'No fresh players available' : 'No players in re-auction pool'}
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
                 </CardContent>
