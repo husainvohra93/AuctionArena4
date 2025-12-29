@@ -1100,6 +1100,261 @@ async def get_dashboard_stats(tournament_id: Optional[str] = None):
         "total_spent": total_spent
     }
 
+# ==================== EXCEL EXPORT/IMPORT ====================
+
+@api_router.get("/export/teams-template")
+async def export_teams_template():
+    """Download sample Excel template for teams upload"""
+    df = pd.DataFrame({
+        'name': ['Mumbai Warriors', 'Delhi Kings'],
+        'short_name': ['MW', 'DK'],
+        'budget': [10000000, 10000000],
+        'owner_email': ['owner1@example.com', 'owner2@example.com']
+    })
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Teams')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': 'attachment; filename=teams_template.xlsx'}
+    )
+
+@api_router.get("/export/players-template")
+async def export_players_template():
+    """Download sample Excel template for players upload"""
+    df = pd.DataFrame({
+        'name': ['Virat Sharma', 'Rohit Singh', 'MS Dhoni'],
+        'role': ['batsman', 'batsman', 'wicket-keeper'],
+        'base_price': [500000, 600000, 700000],
+        'age': [28, 30, 35],
+        'batting_style': ['right-handed', 'right-handed', 'right-handed'],
+        'bowling_style': ['', 'right-arm-spin', ''],
+        'matches': [50, 60, 100],
+        'runs': [2000, 2500, 3000],
+        'wickets': [0, 10, 0]
+    })
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Players')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': 'attachment; filename=players_template.xlsx'}
+    )
+
+@api_router.post("/import/teams/{tournament_id}")
+async def import_teams(tournament_id: str, file: UploadFile = File(...), request: Request = None):
+    """Import teams from Excel file"""
+    if request:
+        await require_admin(request)
+    
+    # Verify tournament exists
+    tournament = await db.tournaments.find_one({"tournament_id": tournament_id})
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    
+    try:
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        teams_created = 0
+        for _, row in df.iterrows():
+            team_id = f"team_{uuid.uuid4().hex[:8]}"
+            budget = float(row.get('budget', 10000000))
+            team_doc = {
+                "team_id": team_id,
+                "name": str(row['name']),
+                "short_name": str(row.get('short_name', row['name'][:3].upper())),
+                "logo_url": str(row.get('logo_url', '')) if pd.notna(row.get('logo_url')) else None,
+                "budget": budget,
+                "remaining_budget": budget,
+                "owner_id": None,
+                "owner_email": str(row.get('owner_email', '')) if pd.notna(row.get('owner_email')) else None,
+                "players": [],
+                "tournament_id": tournament_id,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.teams.insert_one(team_doc)
+            teams_created += 1
+        
+        return {"message": f"Successfully imported {teams_created} teams"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
+
+@api_router.post("/import/players/{tournament_id}")
+async def import_players(tournament_id: str, file: UploadFile = File(...), request: Request = None):
+    """Import players from Excel file"""
+    if request:
+        await require_admin(request)
+    
+    # Verify tournament exists
+    tournament = await db.tournaments.find_one({"tournament_id": tournament_id})
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    
+    try:
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        players_created = 0
+        for _, row in df.iterrows():
+            player_id = f"player_{uuid.uuid4().hex[:8]}"
+            player_doc = {
+                "player_id": player_id,
+                "name": str(row['name']),
+                "role": str(row.get('role', 'batsman')).lower(),
+                "base_price": float(row.get('base_price', 100000)),
+                "current_price": 0,
+                "image_url": str(row.get('image_url', '')) if pd.notna(row.get('image_url')) else None,
+                "age": int(row['age']) if pd.notna(row.get('age')) else None,
+                "batting_style": str(row.get('batting_style', '')) if pd.notna(row.get('batting_style')) else None,
+                "bowling_style": str(row.get('bowling_style', '')) if pd.notna(row.get('bowling_style')) else None,
+                "matches": int(row.get('matches', 0)) if pd.notna(row.get('matches')) else 0,
+                "runs": int(row.get('runs', 0)) if pd.notna(row.get('runs')) else 0,
+                "wickets": int(row.get('wickets', 0)) if pd.notna(row.get('wickets')) else 0,
+                "status": "unsold",
+                "sold_to": None,
+                "sold_price": None,
+                "tournament_id": tournament_id,
+                "auction_id": None,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.players.insert_one(player_doc)
+            players_created += 1
+        
+        return {"message": f"Successfully imported {players_created} players"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
+
+@api_router.get("/export/teams/{tournament_id}")
+async def export_teams(tournament_id: str):
+    """Export all teams with wallet balance for a tournament"""
+    teams = await db.teams.find({"tournament_id": tournament_id}, {"_id": 0}).to_list(100)
+    
+    if not teams:
+        raise HTTPException(status_code=404, detail="No teams found")
+    
+    data = []
+    for team in teams:
+        data.append({
+            'Team Name': team.get('name'),
+            'Short Name': team.get('short_name'),
+            'Total Budget': team.get('budget'),
+            'Remaining Budget': team.get('remaining_budget'),
+            'Spent': team.get('budget', 0) - team.get('remaining_budget', 0),
+            'Players Count': len(team.get('players', [])),
+            'Owner Email': team.get('owner_email', '')
+        })
+    
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Teams')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename=teams_{tournament_id}.xlsx'}
+    )
+
+@api_router.get("/export/players/{tournament_id}")
+async def export_players(tournament_id: str):
+    """Export all auctioned players per team"""
+    players = await db.players.find({"tournament_id": tournament_id}, {"_id": 0}).to_list(1000)
+    teams = await db.teams.find({"tournament_id": tournament_id}, {"_id": 0}).to_list(100)
+    
+    team_map = {t['team_id']: t['name'] for t in teams}
+    
+    data = []
+    for player in players:
+        data.append({
+            'Player Name': player.get('name'),
+            'Role': player.get('role'),
+            'Base Price': player.get('base_price'),
+            'Sold Price': player.get('sold_price') or 'Unsold',
+            'Status': player.get('status'),
+            'Sold To': team_map.get(player.get('sold_to'), 'Unsold'),
+            'Age': player.get('age'),
+            'Matches': player.get('matches'),
+            'Runs': player.get('runs'),
+            'Wickets': player.get('wickets')
+        })
+    
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Players')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename=players_{tournament_id}.xlsx'}
+    )
+
+@api_router.get("/export/auction-results/{tournament_id}")
+async def export_auction_results(tournament_id: str):
+    """Export detailed auction results with players grouped by team"""
+    teams = await db.teams.find({"tournament_id": tournament_id}, {"_id": 0}).to_list(100)
+    players = await db.players.find({"tournament_id": tournament_id}, {"_id": 0}).to_list(1000)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Summary sheet
+        summary_data = []
+        for team in teams:
+            team_players = [p for p in players if p.get('sold_to') == team['team_id']]
+            total_spent = sum(p.get('sold_price', 0) or 0 for p in team_players)
+            summary_data.append({
+                'Team': team.get('name'),
+                'Short Name': team.get('short_name'),
+                'Total Budget': team.get('budget'),
+                'Spent': total_spent,
+                'Remaining': team.get('remaining_budget'),
+                'Players Bought': len(team_players)
+            })
+        
+        pd.DataFrame(summary_data).to_excel(writer, index=False, sheet_name='Summary')
+        
+        # Per-team sheets
+        for team in teams:
+            team_players = [p for p in players if p.get('sold_to') == team['team_id']]
+            if team_players:
+                team_data = [{
+                    'Player': p.get('name'),
+                    'Role': p.get('role'),
+                    'Price': p.get('sold_price'),
+                    'Base Price': p.get('base_price')
+                } for p in team_players]
+                sheet_name = team.get('short_name', team.get('name'))[:31]  # Excel sheet name limit
+                pd.DataFrame(team_data).to_excel(writer, index=False, sheet_name=sheet_name)
+        
+        # Unsold players
+        unsold = [p for p in players if p.get('status') == 'unsold']
+        if unsold:
+            unsold_data = [{
+                'Player': p.get('name'),
+                'Role': p.get('role'),
+                'Base Price': p.get('base_price')
+            } for p in unsold]
+            pd.DataFrame(unsold_data).to_excel(writer, index=False, sheet_name='Unsold')
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename=auction_results_{tournament_id}.xlsx'}
+    )
+
 # ==================== LEGACY AUCTION STATE (for backward compatibility) ====================
 
 @api_router.get("/auction/state")
