@@ -151,6 +151,34 @@ const PlayerManagement = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      await axios.post(`${API}/players/bulk-delete`, { ids: selectedPlayers }, { withCredentials: true });
+      toast.success(`Deleted ${selectedPlayers.length} players`);
+      setSelectedPlayers([]);
+      setBulkDeleteDialogOpen(false);
+      fetchPlayers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Bulk delete failed');
+    }
+  };
+
+  const toggleSelectPlayer = (playerId) => {
+    setSelectedPlayers(prev => 
+      prev.includes(playerId) 
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPlayers.length === filteredPlayers.length) {
+      setSelectedPlayers([]);
+    } else {
+      setSelectedPlayers(filteredPlayers.map(p => p.player_id));
+    }
+  };
+
   const handleReset = async (playerId) => {
     try {
       await axios.post(`${API}/players/${playerId}/reset`, {}, { withCredentials: true });
