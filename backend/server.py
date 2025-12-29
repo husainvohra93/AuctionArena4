@@ -433,12 +433,16 @@ async def create_auction(auction: AuctionCreate, request: Request):
         "date": auction.date,
         "players_per_team": auction.players_per_team,
         "bid_increment_rules": auction.bid_increment_rules,
+        "pick_mode": auction.pick_mode,
+        "random_pick_delay": auction.random_pick_delay,
         "status": "draft",
         "current_player_id": None,
         "current_bid": 0,
         "current_bidder_id": None,
         "current_bidder_name": None,
         "bid_history": [],
+        "last_sold_player_id": None,
+        "last_sold_time": None,
         "created_at": datetime.now(timezone.utc)
     }
     
