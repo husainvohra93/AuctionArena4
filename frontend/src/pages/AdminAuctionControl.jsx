@@ -164,6 +164,16 @@ const AdminAuctionControl = () => {
     }
   };
 
+  const handleRandomPick = async (fromReauction = false) => {
+    try {
+      await axios.post(`${API}/auctions/${auctionId}/random-pick?from_reauction=${fromReauction}`, {}, { withCredentials: true });
+      toast.success('Random player selected!');
+      fetchAuctionState();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to pick random player');
+    }
+  };
+
   const formatPrice = (price) => {
     if (price >= 10000000) return `${(price / 10000000).toFixed(2)} Cr Pts`;
     if (price >= 100000) return `${(price / 100000).toFixed(2)} L Pts`;
