@@ -129,7 +129,4 @@ input, select, textarea {
     @apply w-full aspect-[3/4] object-cover rounded-lg bg-slate-800;
 }
 
-/* Responsive container */
-.container-main {
-    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-}
+/* End of App.css */
