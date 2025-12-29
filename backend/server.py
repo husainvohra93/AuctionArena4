@@ -337,7 +337,6 @@ async def create_team(team: TeamCreate, request: Request):
     }
     
     await db.teams.insert_one(team_doc)
-    del team_doc["_id"] if "_id" in team_doc else None
     
     return await db.teams.find_one({"team_id": team_id}, {"_id": 0})
 
