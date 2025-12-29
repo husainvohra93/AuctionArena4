@@ -49,6 +49,7 @@ const PlayerManagement = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     name: '',
