@@ -295,9 +295,24 @@ const TeamManagement = () => {
             </Dialog>
           </div>
 
+          {/* Tournament Filter */}
+          <div className="mb-6">
+            <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
+              <SelectTrigger className="w-[250px] bg-slate-800 border-slate-700 text-white">
+                <SelectValue placeholder="Filter by Tournament" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectItem value="all">All Tournaments</SelectItem>
+                {tournaments.map((t) => (
+                  <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Teams Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {teams.map((team, index) => (
+            {filteredTeams.map((team, index) => (
               <Card 
                 key={team.team_id}
                 data-testid={`team-card-${team.team_id}`}
@@ -317,6 +332,9 @@ const TeamManagement = () => {
                       <div>
                         <h3 className="font-heading font-bold text-white text-xl">{team.name}</h3>
                         <span className="badge-role">{team.short_name}</span>
+                        {team.tournament_id && (
+                          <p className="text-xs text-blue-400 mt-1">🏆 {getTournamentName(team.tournament_id)}</p>
+                        )}
                       </div>
                     </div>
                   </div>
