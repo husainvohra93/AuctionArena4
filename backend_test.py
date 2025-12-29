@@ -10,12 +10,15 @@ class CricketAuctionAPITester:
     def __init__(self, base_url="https://cricket-mart-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
-        self.session_token = None
+        self.session_token = "admin_session_test"  # Use provided session token
         self.user_id = None
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
         self.passed_tests = []
+        # Test data IDs from agent context
+        self.tournament_id = "tournament_9dc6c123"
+        self.auction_id = "auction_be5bca0c"
 
     def log_result(self, test_name, success, details=""):
         """Log test result"""
