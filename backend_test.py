@@ -107,7 +107,7 @@ class CricketAuctionAPITester:
         if success:
             try:
                 data = response.json()
-                if data.get('message') == 'Cricket Auction API':
+                if data.get('message') == 'Cricket Auction API v2':
                     self.log_result("API Health Check", True)
                 else:
                     self.log_result("API Health Check", False, f"Unexpected response: {data}")
@@ -115,6 +115,207 @@ class CricketAuctionAPITester:
                 self.log_result("API Health Check", False, "Invalid JSON response")
         else:
             self.log_result("API Health Check", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+    def test_tournaments_crud(self):
+        """Test tournament CRUD operations"""
+        # Test GET tournaments
+        success, response = self.make_request('GET', 'tournaments', expected_status=200)
+        if success:
+            self.log_result("Get Tournaments", True)
+            tournaments = response.json()
+        else:
+            self.log_result("Get Tournaments", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+            return
+
+        # Test GET specific tournament
+        success, response = self.make_request('GET', f'tournaments/{self.tournament_id}', expected_status=200)
+        if success:
+            self.log_result("Get Tournament by ID", True)
+        else:
+            self.log_result("Get Tournament by ID", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+        # Test CREATE tournament
+        tournament_data = {
+            "name": "Test Tournament 2025",
+            "description": "Test tournament for API testing",
+            "start_date": "2025-01-01",
+            "end_date": "2025-01-31"
+        }
+        
+        success, response = self.make_request('POST', 'tournaments', data=tournament_data, expected_status=200)
+        if success:
+            try:
+                created_tournament = response.json()
+                tournament_id = created_tournament.get('tournament_id')
+                if tournament_id and created_tournament.get('name') == tournament_data['name']:
+                    self.log_result("Create Tournament", True)
+                    self.test_tournament_id = tournament_id
+                else:
+                    self.log_result("Create Tournament", False, f"Invalid tournament data: {created_tournament}")
+            except:
+                self.log_result("Create Tournament", False, "Invalid JSON response")
+        else:
+            self.log_result("Create Tournament", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+    def test_auctions_crud(self):
+        """Test auction CRUD operations with bid increment rules"""
+        # Test GET auctions
+        success, response = self.make_request('GET', 'auctions', expected_status=200)
+        if success:
+            self.log_result("Get Auctions", True)
+        else:
+            self.log_result("Get Auctions", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+            return
+
+        # Test GET specific auction
+        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
+        if success:
+            try:
+                auction_data = response.json()
+                if auction_data.get('auction_id') == self.auction_id:
+                    self.log_result("Get Auction by ID", True)
+                    # Check if bid increment rules exist
+                    if 'bid_increment_rules' in auction_data:
+                        self.log_result("Auction Bid Increment Rules", True)
+                    else:
+                        self.log_result("Auction Bid Increment Rules", False, "No bid increment rules found")
+                else:
+                    self.log_result("Get Auction by ID", False, f"Wrong auction ID returned: {auction_data}")
+            except:
+                self.log_result("Get Auction by ID", False, "Invalid JSON response")
+        else:
+            self.log_result("Get Auction by ID", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+        # Test CREATE auction with bid increment rules
+        auction_data = {
+            "tournament_id": self.tournament_id,
+            "name": "Test Auction with Rules",
+            "date": "2025-01-15",
+            "players_per_team": 15,
+            "bid_increment_rules": [
+                {"range_start": 0, "increment_by": 100000},
+                {"range_start": 1000000, "increment_by": 200000},
+                {"range_start": 5000000, "increment_by": 500000}
+            ]
+        }
+        
+        success, response = self.make_request('POST', 'auctions', data=auction_data, expected_status=200)
+        if success:
+            try:
+                created_auction = response.json()
+                auction_id = created_auction.get('auction_id')
+                if auction_id and created_auction.get('name') == auction_data['name']:
+                    self.log_result("Create Auction with Bid Rules", True)
+                    self.test_auction_id = auction_id
+                else:
+                    self.log_result("Create Auction with Bid Rules", False, f"Invalid auction data: {created_auction}")
+            except:
+                self.log_result("Create Auction with Bid Rules", False, "Invalid JSON response")
+        else:
+            self.log_result("Create Auction with Bid Rules", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+    def test_auction_controls(self):
+        """Test auction control endpoints - start/pause/stop"""
+        # Test start auction
+        success, response = self.make_request('POST', f'auctions/{self.auction_id}/start', data={}, expected_status=200)
+        if success:
+            self.log_result("Start Auction", True)
+        else:
+            self.log_result("Start Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+        # Test pause auction
+        success, response = self.make_request('POST', f'auctions/{self.auction_id}/pause', data={}, expected_status=200)
+        if success:
+            self.log_result("Pause Auction", True)
+        else:
+            self.log_result("Pause Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+        # Test stop auction
+        success, response = self.make_request('POST', f'auctions/{self.auction_id}/stop', data={}, expected_status=200)
+        if success:
+            self.log_result("Stop Auction", True)
+        else:
+            self.log_result("Stop Auction", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+    def test_admin_bidding(self):
+        """Test admin bid on behalf of teams and decrease bid functionality"""
+        # First get auction teams
+        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
+        if not success:
+            self.log_result("Admin Bidding Setup", False, "Could not get auction data")
+            return
+
+        try:
+            auction_data = response.json()
+            teams = auction_data.get('teams', [])
+            if not teams:
+                self.log_result("Admin Bidding Setup", False, "No teams found in auction")
+                return
+            
+            team_id = teams[0]['team_id']  # Use first team for testing
+            
+            # Test admin bid
+            bid_data = {"team_id": team_id}
+            success, response = self.make_request('POST', f'auctions/{self.auction_id}/admin-bid', data=bid_data, expected_status=200)
+            if success:
+                self.log_result("Admin Bid on Behalf of Team", True)
+            else:
+                self.log_result("Admin Bid on Behalf of Team", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+            # Test decrease bid
+            success, response = self.make_request('POST', f'auctions/{self.auction_id}/decrease-bid', data={}, expected_status=200)
+            if success:
+                self.log_result("Decrease Bid Functionality", True)
+            else:
+                self.log_result("Decrease Bid Functionality", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+        except Exception as e:
+            self.log_result("Admin Bidding Setup", False, f"Error parsing auction data: {str(e)}")
+
+    def test_sell_player(self):
+        """Test sell player functionality"""
+        success, response = self.make_request('POST', f'auctions/{self.auction_id}/sell', data={}, expected_status=200)
+        if success:
+            self.log_result("Sell Player Functionality", True)
+        else:
+            self.log_result("Sell Player Functionality", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+    def test_dynamic_bid_increments(self):
+        """Test dynamic bid increments based on rules"""
+        # Get auction with bid increment rules
+        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
+        if success:
+            try:
+                auction_data = response.json()
+                bid_rules = auction_data.get('bid_increment_rules', [])
+                if bid_rules and len(bid_rules) > 0:
+                    # Check if rules have proper structure
+                    valid_rules = all('range_start' in rule and 'increment_by' in rule for rule in bid_rules)
+                    if valid_rules:
+                        self.log_result("Dynamic Bid Increments Structure", True)
+                    else:
+                        self.log_result("Dynamic Bid Increments Structure", False, "Invalid rule structure")
+                else:
+                    self.log_result("Dynamic Bid Increments Structure", False, "No bid increment rules found")
+            except:
+                self.log_result("Dynamic Bid Increments Structure", False, "Invalid JSON response")
+        else:
+            self.log_result("Dynamic Bid Increments Structure", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+
+    def test_public_view_screen(self):
+        """Test public view screen loads without auth (no auth header)"""
+        # Remove auth header for this test
+        original_token = self.session_token
+        self.session_token = None
+        
+        success, response = self.make_request('GET', f'auctions/{self.auction_id}', expected_status=200)
+        if success:
+            self.log_result("Public View Screen Access", True)
+        else:
+            self.log_result("Public View Screen Access", False, f"Status: {response.status_code if hasattr(response, 'status_code') else response}")
+        
+        # Restore auth header
+        self.session_token = original_token
 
     def test_auth_me(self):
         """Test authentication endpoint"""
