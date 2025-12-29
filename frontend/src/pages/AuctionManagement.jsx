@@ -359,7 +359,7 @@ const AuctionManagement = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-wrap gap-4 mb-8">
             <Button
               variant="outline"
               onClick={() => navigate(`/admin/players?tournament=${tournamentId}`)}
@@ -377,6 +377,58 @@ const AuctionManagement = () => {
               Manage Teams
             </Button>
           </div>
+
+          {/* Import/Export Section */}
+          <Card className="glass-card border-0 mb-8">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-heading text-white text-lg flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-green-400" />
+                Import / Export Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Import */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-slate-300">Import (Upload Excel)</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <input type="file" ref={teamsFileRef} onChange={handleTeamsUpload} accept=".xlsx,.xls" className="hidden" />
+                    <Button size="sm" variant="outline" onClick={() => teamsFileRef.current?.click()} className="border-green-500/50 text-green-400 hover:bg-green-500/10">
+                      <Upload className="w-3 h-3 mr-1" /> Upload Teams
+                    </Button>
+                    <input type="file" ref={playersFileRef} onChange={handlePlayersUpload} accept=".xlsx,.xls" className="hidden" />
+                    <Button size="sm" variant="outline" onClick={() => playersFileRef.current?.click()} className="border-green-500/50 text-green-400 hover:bg-green-500/10">
+                      <Upload className="w-3 h-3 mr-1" /> Upload Players
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => downloadTemplate('teams')} className="text-slate-400 hover:text-white text-xs">
+                      <Download className="w-3 h-3 mr-1" /> Teams Template
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => downloadTemplate('players')} className="text-slate-400 hover:text-white text-xs">
+                      <Download className="w-3 h-3 mr-1" /> Players Template
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Export */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-slate-300">Export (Download Excel)</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => exportData('teams')} className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10">
+                      <Download className="w-3 h-3 mr-1" /> Teams & Wallet
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => exportData('players')} className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10">
+                      <Download className="w-3 h-3 mr-1" /> All Players
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => exportData('auction-results')} className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10">
+                      <Download className="w-3 h-3 mr-1" /> Auction Results
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Auctions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
