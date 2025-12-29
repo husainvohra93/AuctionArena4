@@ -27,12 +27,14 @@ const API = `${BACKEND_URL}/api`;
 
 const PlayerManagement = () => {
   const [players, setPlayers] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [tournamentFilter, setTournamentFilter] = useState('all');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -44,12 +46,28 @@ const PlayerManagement = () => {
     bowling_style: '',
     matches: 0,
     runs: 0,
-    wickets: 0
+    wickets: 0,
+    tournament_id: ''
   });
 
   useEffect(() => {
-    fetchPlayers();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      const [playersRes, tournamentsRes] = await Promise.all([
+        axios.get(`${API}/players`, { withCredentials: true }),
+        axios.get(`${API}/tournaments`, { withCredentials: true })
+      ]);
+      setPlayers(playersRes.data);
+      setTournaments(tournamentsRes.data);
+    } catch (error) {
+      toast.error('Failed to fetch data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchPlayers = async () => {
     try {
@@ -57,8 +75,6 @@ const PlayerManagement = () => {
       setPlayers(response.data);
     } catch (error) {
       toast.error('Failed to fetch players');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -71,7 +87,8 @@ const PlayerManagement = () => {
         age: formData.age ? parseInt(formData.age) : null,
         matches: parseInt(formData.matches) || 0,
         runs: parseInt(formData.runs) || 0,
-        wickets: parseInt(formData.wickets) || 0
+        wickets: parseInt(formData.wickets) || 0,
+        tournament_id: formData.tournament_id || null
       };
 
       if (editingPlayer) {
@@ -102,7 +119,8 @@ const PlayerManagement = () => {
       bowling_style: player.bowling_style || '',
       matches: player.matches || 0,
       runs: player.runs || 0,
-      wickets: player.wickets || 0
+      wickets: player.wickets || 0,
+      tournament_id: player.tournament_id || ''
     });
     setDialogOpen(true);
   };
@@ -141,8 +159,14 @@ const PlayerManagement = () => {
       bowling_style: '',
       matches: 0,
       runs: 0,
-      wickets: 0
+      wickets: 0,
+      tournament_id: ''
     });
+  };
+
+  const getTournamentName = (tournamentId) => {
+    const tournament = tournaments.find(t => t.tournament_id === tournamentId);
+    return tournament?.name || 'Not Assigned';
   };
 
   const formatPrice = (price) => {
@@ -155,7 +179,8 @@ const PlayerManagement = () => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || player.status === statusFilter;
     const matchesRole = roleFilter === 'all' || player.role === roleFilter;
-    return matchesSearch && matchesStatus && matchesRole;
+    const matchesTournament = tournamentFilter === 'all' || player.tournament_id === tournamentFilter;
+    return matchesSearch && matchesStatus && matchesRole && matchesTournament;
   });
 
   const getStatusBadge = (status) => {
