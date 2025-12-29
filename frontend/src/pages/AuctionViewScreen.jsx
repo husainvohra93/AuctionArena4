@@ -12,6 +12,8 @@ const AuctionViewScreen = () => {
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastSoldPlayerId, setLastSoldPlayerId] = useState(null);
+  const [soldPlayerInfo, setSoldPlayerInfo] = useState(null);
+  const [showSoldOverlay, setShowSoldOverlay] = useState(false);
   const confettiTriggered = useRef(false);
 
   useEffect(() => {
@@ -20,32 +22,63 @@ const AuctionViewScreen = () => {
     return () => clearInterval(interval);
   }, [auctionId]);
 
-  // Trigger confetti when a player is sold
+  // Trigger confetti and show SOLD overlay when a player is sold
   useEffect(() => {
     if (auction?.show_confetti && auction?.last_sold_player_id && 
         auction.last_sold_player_id !== lastSoldPlayerId) {
+      
+      // Find the sold player info from teams
+      const soldPlayer = findSoldPlayer(auction.last_sold_player_id);
+      if (soldPlayer) {
+        setSoldPlayerInfo(soldPlayer);
+        setShowSoldOverlay(true);
+        triggerConfetti();
+        
+        // Hide overlay after 4 seconds
+        setTimeout(() => {
+          setShowSoldOverlay(false);
+          setSoldPlayerInfo(null);
+        }, 4000);
+      }
+      
       setLastSoldPlayerId(auction.last_sold_player_id);
-      triggerConfetti();
     }
   }, [auction?.show_confetti, auction?.last_sold_player_id, lastSoldPlayerId]);
 
+  const findSoldPlayer = (playerId) => {
+    // Search through all teams to find the sold player
+    if (!auction?.teams) return null;
+    
+    for (const team of auction.teams) {
+      // We need to fetch player details - for now use cached data
+      // The backend should provide last_sold_player details
+    }
+    
+    // Return info from auction state
+    return {
+      player_id: playerId,
+      team_name: auction?.current_bidder_name || 'Unknown Team',
+      sold_price: auction?.current_bid || 0
+    };
+  };
+
   const triggerConfetti = () => {
-    // Fire confetti from both sides
-    const duration = 3000;
+    // Fire confetti from both sides for 4 seconds
+    const duration = 4000;
     const end = Date.now() + duration;
 
     const colors = ['#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6'];
 
     (function frame() {
       confetti({
-        particleCount: 5,
+        particleCount: 7,
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.6 },
         colors: colors
       });
       confetti({
-        particleCount: 5,
+        particleCount: 7,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.6 },
@@ -57,13 +90,31 @@ const AuctionViewScreen = () => {
       }
     }());
 
-    // Big burst in center
+    // Multiple big bursts
     confetti({
-      particleCount: 150,
-      spread: 100,
-      origin: { x: 0.5, y: 0.5 },
+      particleCount: 200,
+      spread: 120,
+      origin: { x: 0.5, y: 0.4 },
       colors: colors
     });
+    
+    setTimeout(() => {
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { x: 0.3, y: 0.5 },
+        colors: colors
+      });
+    }, 500);
+    
+    setTimeout(() => {
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { x: 0.7, y: 0.5 },
+        colors: colors
+      });
+    }, 1000);
   };
 
   const fetchAuction = async () => {
