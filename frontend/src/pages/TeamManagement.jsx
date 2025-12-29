@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Users, UserPlus, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, UserPlus, Upload, Coins } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -383,14 +383,14 @@ const TeamManagement = () => {
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="bg-slate-800/50 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-slate-400 mb-1">
-                        <IndianRupee className="w-4 h-4" />
+                        <Coins className="w-4 h-4" />
                         <span className="text-xs uppercase">Budget</span>
                       </div>
                       <p className="font-mono font-bold text-white">{formatPrice(team.budget)}</p>
                     </div>
                     <div className="bg-slate-800/50 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-slate-400 mb-1">
-                        <IndianRupee className="w-4 h-4 text-green-400" />
+                        <Coins className="w-4 h-4 text-green-400" />
                         <span className="text-xs uppercase">Remaining</span>
                       </div>
                       <p className="font-mono font-bold text-green-400">{formatPrice(team.remaining_budget)}</p>
