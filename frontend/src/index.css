@@ -106,6 +106,48 @@
     .data-table td {
         @apply py-4 px-4 border-b border-slate-800;
     }
+
+    /* Stat card */
+    .stat-card {
+        @apply glass-card p-6 rounded-xl;
+    }
+
+    .stat-value {
+        @apply text-3xl font-heading font-bold text-white tabular-nums;
+    }
+
+    .stat-label {
+        @apply text-xs uppercase tracking-widest text-slate-500 mt-1;
+    }
+
+    /* Avatar styles */
+    .avatar {
+        @apply w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden;
+    }
+
+    /* Team logo placeholder */
+    .team-logo {
+        @apply w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-2xl font-bold;
+    }
+
+    /* Player image */
+    .player-image {
+        @apply w-full aspect-[3/4] object-cover rounded-xl;
+    }
+
+    /* Sidebar link */
+    .sidebar-link {
+        @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors;
+    }
+
+    .sidebar-link.active {
+        @apply text-white bg-blue-600/20 border-l-4 border-blue-500;
+    }
+
+    /* Card hover effect */
+    .card-hover {
+        @apply transition-all duration-300 hover:border-white/20 hover:shadow-xl hover:-translate-y-1;
+    }
 }
 
 /* Glow Effects */
