@@ -50,7 +50,7 @@ const AuctionViewScreen = () => {
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
       {/* Background */}
       <div 
-        className="fixed inset-0 bg-cover bg-center opacity-10"
+        className="fixed inset-0 bg-cover bg-center opacity-30"
         style={{ 
           backgroundImage: 'url(https://images.unsplash.com/photo-1750716413756-b66624b64ce4?w=1920&q=80)'
         }}
