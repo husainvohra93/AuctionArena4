@@ -507,6 +507,8 @@ async def get_auction(auction_id: str):
     if last_sold_time:
         if isinstance(last_sold_time, str):
             last_sold_time = datetime.fromisoformat(last_sold_time.replace('Z', '+00:00'))
+        elif last_sold_time.tzinfo is None:
+            last_sold_time = last_sold_time.replace(tzinfo=timezone.utc)
         time_diff = (datetime.now(timezone.utc) - last_sold_time).total_seconds()
         show_confetti = time_diff < 5  # Show confetti for 5 seconds after sale
     
