@@ -42,8 +42,10 @@ const AdminAuctionControl = () => {
   const navigate = useNavigate();
   const [auction, setAuction] = useState(null);
   const [unsoldPlayers, setUnsoldPlayers] = useState([]);
+  const [reaucationPool, setReauctionPool] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [activePoolTab, setActivePoolTab] = useState('fresh'); // 'fresh' or 'reauction'
 
   useEffect(() => {
     fetchData();
@@ -53,10 +55,7 @@ const AdminAuctionControl = () => {
 
   const fetchData = async () => {
     try {
-      await Promise.all([
-        fetchAuctionState(),
-        fetchUnsoldPlayers()
-      ]);
+      await fetchAuctionState();
     } finally {
       setLoading(false);
     }
@@ -66,19 +65,11 @@ const AdminAuctionControl = () => {
     try {
       const response = await axios.get(`${API}/auctions/${auctionId}`, { withCredentials: true });
       setAuction(response.data);
+      // The auction response now includes unsold_players and reauction_pool
+      setUnsoldPlayers(response.data.unsold_players || []);
+      setReauctionPool(response.data.reauction_pool || []);
     } catch (error) {
       console.error('Error fetching auction:', error);
-    }
-  };
-
-  const fetchUnsoldPlayers = async () => {
-    try {
-      const auctionRes = await axios.get(`${API}/auctions/${auctionId}`, { withCredentials: true });
-      const tournamentId = auctionRes.data.tournament_id;
-      const response = await axios.get(`${API}/players?status=unsold&tournament_id=${tournamentId}`, { withCredentials: true });
-      setUnsoldPlayers(response.data);
-    } catch (error) {
-      console.error('Error fetching players:', error);
     }
   };
 
