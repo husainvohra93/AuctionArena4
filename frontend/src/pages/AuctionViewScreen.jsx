@@ -333,8 +333,46 @@ const AuctionViewScreen = () => {
         </div>
       </main>
 
-      {/* Sold/Unsold Overlay - shown briefly when player is sold */}
-      {/* This would need WebSocket for instant display, using CSS animation for now */}
+      {/* SOLD Overlay - shown for 4 seconds after player is sold */}
+      {auction?.show_confetti && auction?.last_sold_player && auction?.last_sold_team && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="text-center">
+            {/* Player Image */}
+            <div className="relative inline-block mb-6">
+              <img
+                src={auction.last_sold_player.image_url || 'https://images.unsplash.com/photo-1583072728920-4ed8c72cbc01?w=300&h=400&fit=crop'}
+                alt={auction.last_sold_player.name}
+                className="w-48 h-60 object-cover rounded-2xl shadow-2xl border-4 border-green-500 animate-pulse-glow"
+              />
+              <div className="absolute -top-4 -right-4 bg-green-500 text-white px-4 py-2 rounded-full font-black text-xl shadow-lg animate-bounce">
+                SOLD!
+              </div>
+            </div>
+            
+            {/* Player Name */}
+            <h1 className="font-heading text-5xl md:text-7xl font-black text-white mb-4 animate-scale-in">
+              {auction.last_sold_player.name}
+            </h1>
+            
+            {/* Team Name */}
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <span className="text-2xl text-slate-400">goes to</span>
+            </div>
+            <h2 className="font-heading text-4xl md:text-6xl font-bold text-green-400 mb-6 animate-scale-in" style={{animationDelay: '0.2s'}}>
+              {auction.last_sold_team.name}
+            </h2>
+            
+            {/* Price */}
+            <div className="inline-block bg-green-500/20 border-2 border-green-500 rounded-2xl px-8 py-4 animate-scale-in" style={{animationDelay: '0.4s'}}>
+              <p className="text-slate-400 text-sm uppercase tracking-wider mb-1">Sold For</p>
+              <p className="font-mono text-5xl md:text-6xl font-black text-green-400">
+                {formatPrice(auction.last_sold_price || auction.last_sold_player.sold_price)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes pulse-glow {
           0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
@@ -342,6 +380,20 @@ const AuctionViewScreen = () => {
         }
         .animate-pulse-glow {
           animation: pulse-glow 1s ease-in-out infinite;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        @keyframes scale-in {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.5s ease-out forwards;
         }
       `}</style>
     </div>
