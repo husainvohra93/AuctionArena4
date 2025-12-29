@@ -297,6 +297,38 @@ const AuctionManagement = () => {
                     />
                   </div>
 
+                  {/* Player Pick Mode */}
+                  <div>
+                    <Label className="text-slate-300">Player Selection Mode</Label>
+                    <div className="flex gap-4 mt-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="pick_mode"
+                          value="manual"
+                          checked={formData.pick_mode === 'manual'}
+                          onChange={(e) => setFormData({ ...formData, pick_mode: e.target.value })}
+                          className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-slate-300">Manual Pick</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="pick_mode"
+                          value="random"
+                          checked={formData.pick_mode === 'random'}
+                          onChange={(e) => setFormData({ ...formData, pick_mode: e.target.value })}
+                          className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-slate-300">Random Pick</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Manual: Admin selects players | Random: System randomly picks next player
+                    </p>
+                  </div>
+
                   {/* Bid Increment Rules */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
