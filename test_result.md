@@ -107,63 +107,78 @@ user_problem_statement: "Cricket auction platform with multiple tournaments, dyn
 backend:
   - task: "Reset auction clears was_unsold flag"
     implemented: true
-    working: NA
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: NA
         agent: "main"
         comment: "Updated reset_auction endpoint to clear was_unsold flag along with other player fields"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Reset auction successfully clears was_unsold flags. Re-auction pool goes from 1 to 0 players after reset, and all players have was_unsold=false"
 
   - task: "Random pick player endpoint"
     implemented: true
-    working: NA
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: NA
         agent: "main"
         comment: "Endpoint at /api/auctions/{id}/random-pick with from_reauction parameter to pick from either fresh or re-auction pool"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Random pick functionality working correctly. Successfully picked P34 from fresh pool and P1 from re-auction pool using from_reauction=true parameter"
 
   - task: "Auction pick_mode field"
     implemented: true
-    working: NA
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: NA
         agent: "main"
         comment: "pick_mode field added to auction model (manual/random)"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Auction pick_mode field working correctly. Successfully created auctions with both 'manual' and 'random' pick modes, and GET endpoint returns correct pick_mode values"
 
   - task: "Unsold pool separation (was_unsold flag)"
     implemented: true
-    working: NA
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: NA
         agent: "main"
         comment: "Players marked unsold get was_unsold=true, auction endpoint returns separate unsold_players and reauction_pool lists"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Unsold pool separation working correctly. Fresh pool (unsold_players) contains 71 players, re-auction pool starts empty. After marking player unsold, it moves to re-auction pool with was_unsold=true flag"
 
   - task: "Confetti trigger on player sale"
     implemented: true
-    working: NA
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: NA
         agent: "main"
         comment: "sell_player sets last_sold_player_id and last_sold_time, get_auction returns show_confetti=true for 5 seconds after sale"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Confetti trigger working correctly. After selling player P68, show_confetti=true and last_sold_player_id=player_a26686d1. Fixed timezone issue in datetime comparison for confetti expiration"
 
 frontend:
   - task: "Currency change from Rupees to Points"
