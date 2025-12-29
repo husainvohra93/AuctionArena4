@@ -35,6 +35,7 @@ const PlayerManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [tournamentFilter, setTournamentFilter] = useState('all');
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
