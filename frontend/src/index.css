@@ -106,23 +106,6 @@
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Status Badges */
-.badge-sold {
-    @apply bg-red-500/20 text-red-400 border border-red-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
-}
-
-.badge-unsold {
-    @apply bg-slate-500/20 text-slate-400 border border-slate-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
-}
-
-.badge-in-auction {
-    @apply bg-green-500/20 text-green-400 border border-green-500/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
-}
-
-.badge-role {
-    @apply bg-blue-500/20 text-blue-400 border border-blue-500/50 px-2 py-0.5 rounded text-xs font-mono uppercase;
-}
-
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
