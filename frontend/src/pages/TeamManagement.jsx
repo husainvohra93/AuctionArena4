@@ -130,6 +130,34 @@ const TeamManagement = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      await axios.post(`${API}/teams/bulk-delete`, { ids: selectedTeams }, { withCredentials: true });
+      toast.success(`Deleted ${selectedTeams.length} teams`);
+      setSelectedTeams([]);
+      setBulkDeleteDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Bulk delete failed');
+    }
+  };
+
+  const toggleSelectTeam = (teamId) => {
+    setSelectedTeams(prev => 
+      prev.includes(teamId) 
+        ? prev.filter(id => id !== teamId)
+        : [...prev, teamId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTeams.length === filteredTeams.length) {
+      setSelectedTeams([]);
+    } else {
+      setSelectedTeams(filteredTeams.map(t => t.team_id));
+    }
+  };
+
   const handleAssignTeam = async () => {
     if (!selectedUser || !editingTeam) return;
     
