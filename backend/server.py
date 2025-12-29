@@ -60,6 +60,9 @@ class TeamCreate(BaseModel):
     owner_email: Optional[str] = None
     tournament_id: Optional[str] = None
 
+class BulkDeleteRequest(BaseModel):
+    ids: List[str]
+
 class Team(BaseModel):
     team_id: str
     name: str
