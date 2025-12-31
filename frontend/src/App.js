@@ -50,6 +50,11 @@ const AuthCallback = () => {
           );
           
           const user = response.data;
+
+          // If backend returned session_token (dev flow), set Authorization header for subsequent requests
+          if (response.data?.session_token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.session_token}`;
+          }
           
           // Navigate based on role
           if (user.role === 'admin') {

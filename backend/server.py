@@ -265,17 +265,55 @@ async def create_session(request: Request, response: Response):
     
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     
+    # Set cookie; make secure configurable for local dev
+    secure_cookie = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() == 'true'
+    samesite_mode = 'none' if secure_cookie else 'lax'
+
     response.set_cookie(
         key="session_token",
         value=session_token,
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=secure_cookie,
+        samesite=samesite_mode,
         path="/",
         max_age=7 * 24 * 60 * 60
     )
     
+    # For local developer workflows, optionally return session_token in response
+    if os.environ.get('DEV_RETURN_SESSION', 'false').lower() == 'true':
+        return {**user, 'session_token': session_token}
+
     return user
+
+# DEV-only helper: create a session and redirect (useful for local development/testing)
+@api_router.get('/auth/dev-login')
+async def dev_login(email: str, redirect: str = None):
+    if os.environ.get('DEV_RETURN_SESSION', 'false').lower() != 'true':
+        raise HTTPException(status_code=404, detail='Not available')
+
+    user = await db.users.find_one({'email': email}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+
+    session_token = f'session_{uuid.uuid4().hex[:24]}'
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+
+    await db.user_sessions.insert_one({
+        'user_id': user['user_id'],
+        'session_token': session_token,
+        'expires_at': expires_at,
+        'created_at': datetime.now(timezone.utc)
+    })
+
+    # Set cookie
+    secure_cookie = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() == 'true'
+    samesite_mode = 'none' if secure_cookie else 'lax'
+
+    headers = {'Set-Cookie': f"session_token={session_token}; Path=/; HttpOnly; {'Secure; ' if secure_cookie else ''}SameSite={samesite_mode}; Max-Age={7*24*60*60}"}
+
+    # Redirect back to the given URL (frontend) or root
+    target = redirect or 'http://localhost:3000/'
+    return RedirectResponse(url=target, headers=headers)
 
 @api_router.get("/auth/me")
 async def get_me(request: Request):
@@ -1515,8 +1553,10 @@ import os
 import shutil
 from pathlib import Path
 
-UPLOAD_DIR = Path("/app/backend/uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Use a project-relative uploads directory and ensure parent directories are created.
+# ROOT_DIR is defined at the top of this file as Path(__file__).parent
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @api_router.post("/upload/image")
 async def upload_image(file: UploadFile = File(...), request: Request = None):
