@@ -82,18 +82,18 @@ const AuthCallback = () => {
 };
 
 // Protected Route Component
-const ProtectedRoute = ({ children, requiredRole }) => {
+const ProtectedRoute = ({ children, requiredRole }) => {  
   const location = useLocation();
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(location.state?.user ? true : null);
   const [user, setUser] = useState(location.state?.user || null);
 
   useEffect(() => {
-    if (location.state?.user) {
+    /*if (location.state?.user) {
       setUser(location.state.user);
       setIsAuthenticated(true);
       return;
-    }
+    }*/
 
     const checkAuth = async () => {
       try {
@@ -102,12 +102,12 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         setIsAuthenticated(true);
       } catch (error) {
         setIsAuthenticated(false);
-        navigate('/login', { replace: true });
+        //navigate('/login', { replace: true });
       }
     };
 
     checkAuth();
-  }, [location.state, navigate]);
+  }, []);
 
   if (isAuthenticated === null) {
     return (
