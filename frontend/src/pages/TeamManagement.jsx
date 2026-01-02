@@ -50,7 +50,7 @@ const TeamManagement = () => {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     short_name: '',
@@ -68,7 +68,7 @@ const TeamManagement = () => {
     try {
       const [teamsRes, usersRes, tournamentsRes] = await Promise.all([
         axios.get(`${API}/teams`, { withCredentials: true }),
-        axios.get(`${API}/users`, { withCredentials: true }),
+        axios.get(`${API}/admin/users`, { withCredentials: true }),
         axios.get(`${API}/tournaments`, { withCredentials: true })
       ]);
       setTeams(teamsRes.data);
@@ -97,7 +97,7 @@ const TeamManagement = () => {
         await axios.post(`${API}/teams`, payload, { withCredentials: true });
         toast.success('Team created successfully');
       }
-      
+
       setDialogOpen(false);
       resetForm();
       fetchData();
@@ -121,7 +121,7 @@ const TeamManagement = () => {
 
   const handleDelete = async (teamId) => {
     if (!window.confirm('Are you sure you want to delete this team?')) return;
-    
+
     try {
       await axios.delete(`${API}/teams/${teamId}`, { withCredentials: true });
       toast.success('Team deleted successfully');
@@ -144,8 +144,8 @@ const TeamManagement = () => {
   };
 
   const toggleSelectTeam = (teamId) => {
-    setSelectedTeams(prev => 
-      prev.includes(teamId) 
+    setSelectedTeams(prev =>
+      prev.includes(teamId)
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
     );
@@ -161,9 +161,9 @@ const TeamManagement = () => {
 
   const handleAssignTeam = async () => {
     if (!selectedUser || !editingTeam) return;
-    
+
     try {
-      await axios.put(`${API}/users/${selectedUser}/team`, 
+      await axios.put(`${API}/admin/users/${selectedUser}/team`,
         { team_id: editingTeam.team_id },
         { withCredentials: true }
       );
@@ -179,7 +179,7 @@ const TeamManagement = () => {
 
   const handleUpdateRole = async (userId, newRole) => {
     try {
-      await axios.put(`${API}/users/${userId}/role`, 
+      await axios.put(`${API}/admin/users/${userId}/role`,
         { role: newRole },
         { withCredentials: true }
       );
@@ -239,11 +239,11 @@ const TeamManagement = () => {
               <h1 className="font-heading text-3xl font-bold text-white tracking-tight">Team Management</h1>
               <p className="text-slate-400 mt-1">{teams.length} teams registered</p>
             </div>
-            
+
             <div className="flex gap-2">
               {selectedTeams.length > 0 && (
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={() => setBulkDeleteDialogOpen(true)}
                   className="bg-red-600 hover:bg-red-500"
                 >
@@ -251,7 +251,7 @@ const TeamManagement = () => {
                   Delete ({selectedTeams.length})
                 </Button>
               )}
-              
+
               <Dialog open={dialogOpen} onOpenChange={(open) => {
                 setDialogOpen(open);
                 if (!open) resetForm();
@@ -262,137 +262,137 @@ const TeamManagement = () => {
                     Add Team
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="bg-slate-900 border-slate-700">
-                <DialogHeader>
-                  <DialogTitle className="font-heading text-white">
-                    {editingTeam ? 'Edit Team' : 'Add New Team'}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                  <div>
-                    <Label className="text-slate-300">Team Name *</Label>
-                    <Input
-                      data-testid="team-name-input"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      placeholder="Mumbai Indians"
-                      className="bg-slate-800 border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Short Name *</Label>
-                    <Input
-                      data-testid="team-short-name-input"
-                      value={formData.short_name}
-                      onChange={(e) => setFormData({ ...formData, short_name: e.target.value.toUpperCase() })}
-                      required
-                      placeholder="MI"
-                      maxLength={4}
-                      className="bg-slate-800 border-slate-700 text-white"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-slate-300">Team Logo</Label>
-                    <div className="flex gap-2 mt-1">
+                <DialogContent className="bg-slate-900 border-slate-700">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-white">
+                      {editingTeam ? 'Edit Team' : 'Add New Team'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-slate-300">Team Name *</Label>
                       <Input
-                        value={formData.logo_url}
-                        onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                        placeholder="Paste URL or click Upload"
-                        className="bg-slate-800 border-slate-700 text-white flex-1"
+                        data-testid="team-name-input"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        placeholder="Mumbai Indians"
+                        className="bg-slate-800 border-slate-700 text-white"
                       />
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          
-                          setUploading(true);
-                          const uploadData = new FormData();
-                          uploadData.append('file', file);
-                          
-                          try {
-                            const res = await axios.post(`${API}/upload/image`, uploadData, {
-                              withCredentials: true,
-                              headers: { 'Content-Type': 'multipart/form-data' }
-                            });
-                            setFormData(prev => ({ ...prev, logo_url: `${BACKEND_URL}${res.data.url}` }));
-                            toast.success('Logo uploaded!');
-                          } catch (err) {
-                            toast.error(err.response?.data?.detail || 'Upload failed');
-                          } finally {
-                            setUploading(false);
-                          }
-                          e.target.value = '';
-                        }}
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Short Name *</Label>
+                      <Input
+                        data-testid="team-short-name-input"
+                        value={formData.short_name}
+                        onChange={(e) => setFormData({ ...formData, short_name: e.target.value.toUpperCase() })}
+                        required
+                        placeholder="MI"
+                        maxLength={4}
+                        className="bg-slate-800 border-slate-700 text-white"
                       />
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="border-slate-700 text-slate-300 hover:bg-slate-800" 
-                        disabled={uploading}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-1" />
-                        {uploading ? '...' : 'Upload'}
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-slate-300">Team Logo</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          value={formData.logo_url}
+                          onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                          placeholder="Paste URL or click Upload"
+                          className="bg-slate-800 border-slate-700 text-white flex-1"
+                        />
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+
+                            setUploading(true);
+                            const uploadData = new FormData();
+                            uploadData.append('file', file);
+
+                            try {
+                              const res = await axios.post(`${API}/upload/image`, uploadData, {
+                                withCredentials: true,
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                              });
+                              setFormData(prev => ({ ...prev, logo_url: `${BACKEND_URL}${res.data.url}` }));
+                              toast.success('Logo uploaded!');
+                            } catch (err) {
+                              toast.error(err.response?.data?.detail || 'Upload failed');
+                            } finally {
+                              setUploading(false);
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                          disabled={uploading}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-1" />
+                          {uploading ? '...' : 'Upload'}
+                        </Button>
+                      </div>
+                      {formData.logo_url && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <img src={formData.logo_url} alt="Preview" className="w-12 h-12 rounded object-cover" onError={(e) => e.target.style.display = 'none'} />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Budget (Points) *</Label>
+                      <Input
+                        data-testid="team-budget-input"
+                        type="number"
+                        value={formData.budget}
+                        onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                        required
+                        className="bg-slate-800 border-slate-700 text-white"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">{formatPrice(parseFloat(formData.budget) || 0)}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Tournament *</Label>
+                      <Select value={formData.tournament_id} onValueChange={(v) => setFormData({ ...formData, tournament_id: v })}>
+                        <SelectTrigger data-testid="team-tournament-select" className="bg-slate-800 border-slate-700 text-white">
+                          <SelectValue placeholder="Select Tournament" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-700">
+                          {tournaments.map((t) => (
+                            <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Owner Email (Optional)</Label>
+                      <Input
+                        type="email"
+                        value={formData.owner_email}
+                        onChange={(e) => setFormData({ ...formData, owner_email: e.target.value })}
+                        placeholder="owner@example.com"
+                        className="bg-slate-800 border-slate-700 text-white"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300">
+                        Cancel
+                      </Button>
+                      <Button type="submit" data-testid="save-team-btn" className="btn-primary">
+                        {editingTeam ? 'Update' : 'Create'} Team
                       </Button>
                     </div>
-                    {formData.logo_url && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <img src={formData.logo_url} alt="Preview" className="w-12 h-12 rounded object-cover" onError={(e) => e.target.style.display='none'} />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Budget (Points) *</Label>
-                    <Input
-                      data-testid="team-budget-input"
-                      type="number"
-                      value={formData.budget}
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      required
-                      className="bg-slate-800 border-slate-700 text-white"
-                    />
-                    <p className="text-xs text-slate-500 mt-1">{formatPrice(parseFloat(formData.budget) || 0)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Tournament *</Label>
-                    <Select value={formData.tournament_id} onValueChange={(v) => setFormData({ ...formData, tournament_id: v })}>
-                      <SelectTrigger data-testid="team-tournament-select" className="bg-slate-800 border-slate-700 text-white">
-                        <SelectValue placeholder="Select Tournament" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        {tournaments.map((t) => (
-                          <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Owner Email (Optional)</Label>
-                    <Input
-                      type="email"
-                      value={formData.owner_email}
-                      onChange={(e) => setFormData({ ...formData, owner_email: e.target.value })}
-                      placeholder="owner@example.com"
-                      className="bg-slate-800 border-slate-700 text-white"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300">
-                      Cancel
-                    </Button>
-                    <Button type="submit" data-testid="save-team-btn" className="btn-primary">
-                      {editingTeam ? 'Update' : 'Create'} Team
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -439,7 +439,7 @@ const TeamManagement = () => {
           {/* Teams Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {filteredTeams.map((team, index) => (
-              <Card 
+              <Card
                 key={team.team_id}
                 data-testid={`team-card-${team.team_id}`}
                 className={`glass-card border-0 card-hover animate-fade-in-up ${selectedTeams.includes(team.team_id) ? 'ring-2 ring-blue-500' : ''}`}
@@ -448,7 +448,7 @@ const TeamManagement = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     {/* Checkbox */}
-                    <div 
+                    <div
                       className="cursor-pointer mr-3 mt-1"
                       onClick={() => toggleSelectTeam(team.team_id)}
                     >
@@ -474,7 +474,7 @@ const TeamManagement = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="bg-slate-800/50 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-slate-400 mb-1">
@@ -491,7 +491,7 @@ const TeamManagement = () => {
                       <p className="font-mono font-bold text-green-400">{formatPrice(team.remaining_budget)}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-slate-400">
                       <Users className="w-4 h-4" />
@@ -501,7 +501,7 @@ const TeamManagement = () => {
                       <span className="text-xs text-slate-500 truncate max-w-[150px]">{team.owner_email}</span>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -582,8 +582,8 @@ const TeamManagement = () => {
                           </td>
                           <td className="text-slate-400">{user.email}</td>
                           <td>
-                            <Select 
-                              value={user.role} 
+                            <Select
+                              value={user.role}
                               onValueChange={(v) => handleUpdateRole(user.user_id, v)}
                             >
                               <SelectTrigger className="w-[130px] bg-slate-800 border-slate-700 text-white h-8">
@@ -674,22 +674,22 @@ const TeamManagement = () => {
                     </Select>
                   </div>
                 )}
-                
+
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => {
                       setAssignDialogOpen(false);
                       setSelectedUser(null);
                       setEditingTeam(null);
-                    }} 
+                    }}
                     className="border-slate-700 text-slate-300"
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    onClick={handleAssignTeam} 
+                  <Button
+                    onClick={handleAssignTeam}
                     disabled={!selectedUser || !editingTeam}
                     className="btn-primary"
                   >
@@ -706,7 +706,7 @@ const TeamManagement = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-white">Delete {selectedTeams.length} Teams?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  Are you sure you want to delete {selectedTeams.length} selected teams? 
+                  Are you sure you want to delete {selectedTeams.length} selected teams?
                   This will also reset any players assigned to these teams. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>

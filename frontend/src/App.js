@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 // Pages
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PlayerManagement from "@/pages/PlayerManagement";
 import TeamManagement from "@/pages/TeamManagement";
@@ -23,63 +24,6 @@ const API = `${BACKEND_URL}/api`;
 
 // Auth Context
 export const AuthContext = React.createContext(null);
-
-import React from 'react';
-
-// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-const AuthCallback = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const hasProcessed = useRef(false);
-
-  useEffect(() => {
-    if (hasProcessed.current) return;
-    hasProcessed.current = true;
-
-    const processAuth = async () => {
-      const hash = location.hash;
-      const sessionIdMatch = hash.match(/session_id=([^&]+)/);
-      
-      if (sessionIdMatch) {
-        const sessionId = sessionIdMatch[1];
-        try {
-          const response = await axios.post(
-            `${API}/auth/session`,
-            { session_id: sessionId },
-            { withCredentials: true }
-          );
-          
-          const user = response.data;
-
-          // If backend returned session_token (dev flow), set Authorization header for subsequent requests
-          if (response.data?.session_token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.session_token}`;
-          }
-          
-          // Navigate based on role
-          if (user.role === 'admin') {
-            navigate('/admin', { state: { user }, replace: true });
-          } else {
-            navigate('/team', { state: { user }, replace: true });
-          }
-        } catch (error) {
-          console.error('Auth error:', error);
-          navigate('/login', { replace: true });
-        }
-      } else {
-        navigate('/login', { replace: true });
-      }
-    };
-
-    processAuth();
-  }, [location, navigate]);
-
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="text-white text-xl">Authenticating...</div>
-    </div>
-  );
-};
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -132,19 +76,13 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   );
 };
 
-// App Router with session_id detection
+// App Router
 function AppRouter() {
-  const location = useLocation();
-
-  // Check URL fragment for session_id SYNCHRONOUSLY during render
-  if (location.hash?.includes('session_id=')) {
-    return <AuthCallback />;
-  }
-
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      
+      <Route path="/register" element={<Register />} />
+
       {/* Admin Routes */}
       <Route path="/admin" element={
         <ProtectedRoute requiredRole="admin">
@@ -187,24 +125,24 @@ function AppRouter() {
           <AuctionControl />
         </ProtectedRoute>
       } />
-      
+
       {/* Team Owner Routes */}
       <Route path="/team" element={
         <ProtectedRoute requiredRole="team_owner">
           <TeamOwnerDashboard />
         </ProtectedRoute>
       } />
-      
+
       {/* Public View Screen (no auth required) */}
       <Route path="/auction/:auctionId/view" element={<AuctionViewScreen />} />
-      
+
       {/* Live Auction - Both roles can access */}
       <Route path="/auction" element={
         <ProtectedRoute>
           <LiveAuction />
         </ProtectedRoute>
       } />
-      
+
       {/* Default redirect */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />

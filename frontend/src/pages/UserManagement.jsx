@@ -21,12 +21,12 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Users, 
-  Shield, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Users,
+  Shield,
   UserCheck,
   Mail,
   Building2,
@@ -55,10 +55,11 @@ const UserManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'team_owner',
     team_id: ''
   });
@@ -88,6 +89,7 @@ const UserManagement = () => {
       const payload = {
         name: formData.name,
         email: formData.email,
+        password: formData.password,
         role: formData.role,
         team_id: formData.team_id === 'none' ? '' : (formData.team_id || null)
       };
@@ -100,7 +102,7 @@ const UserManagement = () => {
         toast.success('User created successfully');
         toast.success('User created successfully');
       }
-      
+
       setDialogOpen(false);
       resetForm();
       fetchData();
@@ -127,7 +129,7 @@ const UserManagement = () => {
 
   const handleDelete = async () => {
     if (!userToDelete) return;
-    
+
     try {
       await axios.delete(`${API}/admin/users/${userToDelete.user_id}`, { withCredentials: true });
       toast.success('User deleted');
@@ -144,6 +146,7 @@ const UserManagement = () => {
     setFormData({
       name: '',
       email: '',
+      password: '',
       role: 'team_owner',
       team_id: ''
     });
@@ -166,7 +169,7 @@ const UserManagement = () => {
     );
   };
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.team_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -198,7 +201,7 @@ const UserManagement = () => {
               </h1>
               <p className="text-slate-400 mt-1">Manage registered users and their team assignments</p>
             </div>
-            
+
             <Dialog open={dialogOpen} onOpenChange={(open) => {
               setDialogOpen(open);
               if (!open) resetForm();
@@ -226,7 +229,7 @@ const UserManagement = () => {
                       className="bg-slate-800 border-slate-700 text-white"
                     />
                   </div>
-                  
+
                   <div>
                     <Label className="text-slate-300">Email *</Label>
                     <Input
@@ -242,11 +245,26 @@ const UserManagement = () => {
                       <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
                     )}
                   </div>
-                  
+
+                  {!editingUser && (
+                    <div>
+                      <Label className="text-slate-300">Password *</Label>
+                      <Input
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required
+                        placeholder="••••••••"
+                        minLength={6}
+                        className="bg-slate-800 border-slate-700 text-white"
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <Label className="text-slate-300">Role *</Label>
-                    <Select 
-                      value={formData.role} 
+                    <Select
+                      value={formData.role}
                       onValueChange={(value) => setFormData({ ...formData, role: value })}
                     >
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
@@ -268,11 +286,11 @@ const UserManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label className="text-slate-300">Assign Team (Optional)</Label>
-                    <Select 
-                      value={formData.team_id} 
+                    <Select
+                      value={formData.team_id}
                       onValueChange={(value) => setFormData({ ...formData, team_id: value })}
                     >
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
@@ -283,8 +301,8 @@ const UserManagement = () => {
                           No team assigned
                         </SelectItem>
                         {teams.map((team) => (
-                          <SelectItem 
-                            key={team.team_id} 
+                          <SelectItem
+                            key={team.team_id}
                             value={team.team_id}
                             className="text-white hover:bg-slate-700"
                           >
@@ -294,7 +312,7 @@ const UserManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="flex justify-end gap-3 pt-4">
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300">
                       Cancel
@@ -367,7 +385,7 @@ const UserManagement = () => {
               <ScrollArea className="h-[60vh]">
                 <div className="divide-y divide-slate-800">
                   {filteredUsers.map((user) => (
-                    <div 
+                    <div
                       key={user.user_id}
                       className="p-4 hover:bg-slate-800/30 transition-colors"
                     >
@@ -383,7 +401,7 @@ const UserManagement = () => {
                               </span>
                             )}
                           </div>
-                          
+
                           {/* Info */}
                           <div>
                             <div className="flex items-center gap-2">
@@ -402,7 +420,7 @@ const UserManagement = () => {
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Actions */}
                         <div className="flex gap-2">
                           <Button
@@ -425,7 +443,7 @@ const UserManagement = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {filteredUsers.length === 0 && (
                     <div className="text-center py-12">
                       <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
@@ -443,7 +461,7 @@ const UserManagement = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-white">Delete User?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  Are you sure you want to delete <span className="text-white font-bold">{userToDelete?.name || userToDelete?.email}</span>? 
+                  Are you sure you want to delete <span className="text-white font-bold">{userToDelete?.name || userToDelete?.email}</span>?
                   This action cannot be undone. If they have a team assigned, it will be unassigned.
                 </AlertDialogDescription>
               </AlertDialogHeader>

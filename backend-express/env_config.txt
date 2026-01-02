@@ -1,0 +1,6 @@
+MONGO_URL=mongodb://localhost:27017/auction_arena
+DB_NAME=auction_arena
+SESSION_COOKIE_SECURE=false
+DEV_RETURN_SESSION=true
+PORT=8000
+CORS_ORIGINS=http://localhost:3000
