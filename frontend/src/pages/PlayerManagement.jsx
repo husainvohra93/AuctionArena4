@@ -50,7 +50,7 @@ const PlayerManagement = () => {
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     role: 'batsman',
@@ -113,7 +113,7 @@ const PlayerManagement = () => {
         await axios.post(`${API}/players`, payload, { withCredentials: true });
         toast.success('Player added successfully');
       }
-      
+
       setDialogOpen(false);
       resetForm();
       fetchPlayers();
@@ -142,7 +142,7 @@ const PlayerManagement = () => {
 
   const handleDelete = async (playerId) => {
     if (!window.confirm('Are you sure you want to delete this player?')) return;
-    
+
     try {
       await axios.delete(`${API}/players/${playerId}`, { withCredentials: true });
       toast.success('Player deleted successfully');
@@ -165,8 +165,8 @@ const PlayerManagement = () => {
   };
 
   const toggleSelectPlayer = (playerId) => {
-    setSelectedPlayers(prev => 
-      prev.includes(playerId) 
+    setSelectedPlayers(prev =>
+      prev.includes(playerId)
         ? prev.filter(id => id !== playerId)
         : [...prev, playerId]
     );
@@ -257,11 +257,11 @@ const PlayerManagement = () => {
               <h1 className="font-heading text-3xl font-bold text-white tracking-tight">Player Management</h1>
               <p className="text-slate-400 mt-1">{players.length} players registered</p>
             </div>
-            
+
             <div className="flex gap-2">
               {selectedPlayers.length > 0 && (
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={() => setBulkDeleteDialogOpen(true)}
                   className="bg-red-600 hover:bg-red-500"
                 >
@@ -269,7 +269,7 @@ const PlayerManagement = () => {
                   Delete ({selectedPlayers.length})
                 </Button>
               )}
-              
+
               <Dialog open={dialogOpen} onOpenChange={(open) => {
                 setDialogOpen(open);
                 if (!open) resetForm();
@@ -280,193 +280,196 @@ const PlayerManagement = () => {
                     Add Player
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="font-heading text-white">
-                    {editingPlayer ? 'Edit Player' : 'Add New Player'}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-slate-300">Name *</Label>
-                      <Input
-                        data-testid="player-name-input"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                        className="bg-slate-800 border-slate-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Role *</Label>
-                      <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
-                        <SelectTrigger data-testid="player-role-select" className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="batsman">Batsman</SelectItem>
-                          <SelectItem value="bowler">Bowler</SelectItem>
-                          <SelectItem value="all-rounder">All-Rounder</SelectItem>
-                          <SelectItem value="wicket-keeper">Wicket-Keeper</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Base Price (Points) *</Label>
-                      <Input
-                        data-testid="player-base-price-input"
-                        type="number"
-                        value={formData.base_price}
-                        onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
-                        required
-                        className="bg-slate-800 border-slate-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Tournament *</Label>
-                      <Select value={formData.tournament_id} onValueChange={(v) => setFormData({ ...formData, tournament_id: v })}>
-                        <SelectTrigger data-testid="player-tournament-select" className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue placeholder="Select Tournament" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          {tournaments.map((t) => (
-                            <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Age</Label>
-                      <Input
-                        type="number"
-                        value={formData.age}
-                        onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                        className="bg-slate-800 border-slate-700 text-white"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label className="text-slate-300">Player Image</Label>
-                      <div className="flex gap-2 mt-1">
+                <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-white">
+                      {editingPlayer ? 'Edit Player' : 'Add New Player'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-slate-300">Name *</Label>
                         <Input
-                          data-testid="player-image-input"
-                          value={formData.image_url}
-                          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                          placeholder="Paste URL or click Upload"
-                          className="bg-slate-800 border-slate-700 text-white flex-1"
+                          data-testid="player-name-input"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                          className="bg-slate-800 border-slate-700 text-white"
                         />
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files[0];
-                            if (!file) return;
-                            
-                            setUploading(true);
-                            const uploadData = new FormData();
-                            uploadData.append('file', file);
-                            
-                            try {
-                              const res = await axios.post(`${API}/upload/image`, uploadData, {
-                                withCredentials: true,
-                                headers: { 'Content-Type': 'multipart/form-data' }
-                              });
-                              setFormData(prev => ({ ...prev, image_url: `${BACKEND_URL}${res.data.url}` }));
-                              toast.success('Image uploaded!');
-                            } catch (err) {
-                              toast.error(err.response?.data?.detail || 'Upload failed');
-                            } finally {
-                              setUploading(false);
-                            }
-                            e.target.value = '';
-                          }}
-                        />
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          className="border-slate-700 text-slate-300 hover:bg-slate-800" 
-                          disabled={uploading}
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <Upload className="w-4 h-4 mr-1" />
-                          {uploading ? 'Uploading...' : 'Upload'}
-                        </Button>
                       </div>
-                      {formData.image_url && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <img src={formData.image_url} alt="Preview" className="w-16 h-16 rounded object-cover" onError={(e) => e.target.style.display='none'} />
-                          <span className="text-xs text-slate-500 truncate flex-1">{formData.image_url}</span>
+                      <div>
+                        <Label className="text-slate-300">Role *</Label>
+                        <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
+                          <SelectTrigger data-testid="player-role-select" className="bg-slate-800 border-slate-700 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-700">
+                            <SelectItem value="batsman">Batsman</SelectItem>
+                            <SelectItem value="bowler">Bowler</SelectItem>
+                            <SelectItem value="all-rounder">All-Rounder</SelectItem>
+                            <SelectItem value="wicket-keeper">Wicket-Keeper</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Base Price (Points) *</Label>
+                        <Input
+                          data-testid="player-base-price-input"
+                          type="number"
+                          value={formData.base_price}
+                          onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
+                          required
+                          className="bg-slate-800 border-slate-700 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Tournament *</Label>
+                        <Select value={formData.tournament_id} onValueChange={(v) => setFormData({ ...formData, tournament_id: v })}>
+                          <SelectTrigger data-testid="player-tournament-select" className="bg-slate-800 border-slate-700 text-white">
+                            <SelectValue placeholder="Select Tournament" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-700">
+                            {tournaments.map((t) => (
+                              <SelectItem key={t.tournament_id} value={t.tournament_id}>{t.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Age</Label>
+                        <Input
+                          type="number"
+                          value={formData.age}
+                          onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                          className="bg-slate-800 border-slate-700 text-white"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-slate-300">Player Image</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Input
+                            data-testid="player-image-input"
+                            value={formData.image_url}
+                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                            placeholder="Paste URL or click Upload"
+                            className="bg-slate-800 border-slate-700 text-white flex-1"
+                          />
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+
+                              setUploading(true);
+                              const uploadData = new FormData();
+                              uploadData.append('file', file);
+
+                              try {
+                                const res = await axios.post(`${API}/upload/image`, uploadData, {
+                                  withCredentials: true,
+                                  headers: { 'Content-Type': 'multipart/form-data' }
+                                });
+                                setFormData(prev => ({
+                                  ...prev,
+                                  image_url: res.data.url.startsWith('http') ? res.data.url : `${BACKEND_URL}${res.data.url}`
+                                }));
+                                toast.success('Image uploaded!');
+                              } catch (err) {
+                                toast.error(err.response?.data?.detail || 'Upload failed');
+                              } finally {
+                                setUploading(false);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                            disabled={uploading}
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <Upload className="w-4 h-4 mr-1" />
+                            {uploading ? 'Uploading...' : 'Upload'}
+                          </Button>
                         </div>
-                      )}
+                        {formData.image_url && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <img src={formData.image_url} alt="Preview" className="w-16 h-16 rounded object-cover" onError={(e) => e.target.style.display = 'none'} />
+                            <span className="text-xs text-slate-500 truncate flex-1">{formData.image_url}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Batting Style</Label>
+                        <Select value={formData.batting_style} onValueChange={(v) => setFormData({ ...formData, batting_style: v })}>
+                          <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-700">
+                            <SelectItem value="right-handed">Right-Handed</SelectItem>
+                            <SelectItem value="left-handed">Left-Handed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Bowling Style</Label>
+                        <Select value={formData.bowling_style} onValueChange={(v) => setFormData({ ...formData, bowling_style: v })}>
+                          <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-700">
+                            <SelectItem value="right-arm-fast">Right-Arm Fast</SelectItem>
+                            <SelectItem value="left-arm-fast">Left-Arm Fast</SelectItem>
+                            <SelectItem value="right-arm-spin">Right-Arm Spin</SelectItem>
+                            <SelectItem value="left-arm-spin">Left-Arm Spin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Matches</Label>
+                        <Input
+                          type="number"
+                          value={formData.matches}
+                          onChange={(e) => setFormData({ ...formData, matches: e.target.value })}
+                          className="bg-slate-800 border-slate-700 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Runs</Label>
+                        <Input
+                          type="number"
+                          value={formData.runs}
+                          onChange={(e) => setFormData({ ...formData, runs: e.target.value })}
+                          className="bg-slate-800 border-slate-700 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Wickets</Label>
+                        <Input
+                          type="number"
+                          value={formData.wickets}
+                          onChange={(e) => setFormData({ ...formData, wickets: e.target.value })}
+                          className="bg-slate-800 border-slate-700 text-white"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-slate-300">Batting Style</Label>
-                      <Select value={formData.batting_style} onValueChange={(v) => setFormData({ ...formData, batting_style: v })}>
-                        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="right-handed">Right-Handed</SelectItem>
-                          <SelectItem value="left-handed">Left-Handed</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300">
+                        Cancel
+                      </Button>
+                      <Button type="submit" data-testid="save-player-btn" className="btn-primary">
+                        {editingPlayer ? 'Update' : 'Add'} Player
+                      </Button>
                     </div>
-                    <div>
-                      <Label className="text-slate-300">Bowling Style</Label>
-                      <Select value={formData.bowling_style} onValueChange={(v) => setFormData({ ...formData, bowling_style: v })}>
-                        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="right-arm-fast">Right-Arm Fast</SelectItem>
-                          <SelectItem value="left-arm-fast">Left-Arm Fast</SelectItem>
-                          <SelectItem value="right-arm-spin">Right-Arm Spin</SelectItem>
-                          <SelectItem value="left-arm-spin">Left-Arm Spin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Matches</Label>
-                      <Input
-                        type="number"
-                        value={formData.matches}
-                        onChange={(e) => setFormData({ ...formData, matches: e.target.value })}
-                        className="bg-slate-800 border-slate-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Runs</Label>
-                      <Input
-                        type="number"
-                        value={formData.runs}
-                        onChange={(e) => setFormData({ ...formData, runs: e.target.value })}
-                        className="bg-slate-800 border-slate-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Wickets</Label>
-                      <Input
-                        type="number"
-                        value={formData.wickets}
-                        onChange={(e) => setFormData({ ...formData, wickets: e.target.value })}
-                        className="bg-slate-800 border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300">
-                      Cancel
-                    </Button>
-                    <Button type="submit" data-testid="save-player-btn" className="btn-primary">
-                      {editingPlayer ? 'Update' : 'Add'} Player
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -547,10 +550,10 @@ const PlayerManagement = () => {
               <span className="text-sm text-slate-400">{selectedPlayers.length} selected</span>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredPlayers.map((player, index) => (
-              <Card 
+              <Card
                 key={player.player_id}
                 data-testid={`player-card-${player.player_id}`}
                 className={`glass-card border-0 card-hover animate-fade-in-up ${selectedPlayers.includes(player.player_id) ? 'ring-2 ring-blue-500' : ''}`}
@@ -559,7 +562,7 @@ const PlayerManagement = () => {
                 <CardContent className="p-4">
                   <div className="relative mb-4">
                     {/* Checkbox */}
-                    <div 
+                    <div
                       className="absolute top-2 left-2 z-10 cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); toggleSelectPlayer(player.player_id); }}
                     >
@@ -577,7 +580,7 @@ const PlayerManagement = () => {
                       {getStatusBadge(player.status)}
                     </div>
                   </div>
-                  
+
                   <h3 className="font-heading font-bold text-white text-lg truncate">{player.name}</h3>
                   <div className="flex items-center gap-2 mt-1 mb-2">
                     <span className="badge-role">{player.role}</span>
@@ -586,7 +589,7 @@ const PlayerManagement = () => {
                   {player.tournament_id && (
                     <p className="text-xs text-blue-400 mb-3 truncate">🏆 {getTournamentName(player.tournament_id)}</p>
                   )}
-                  
+
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <p className="text-xs text-slate-500 uppercase">Base Price</p>
@@ -599,7 +602,7 @@ const PlayerManagement = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       size="sm"

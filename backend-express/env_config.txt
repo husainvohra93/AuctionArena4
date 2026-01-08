@@ -4,3 +4,8 @@ SESSION_COOKIE_SECURE=false
 DEV_RETURN_SESSION=true
 PORT=8000
 CORS_ORIGINS=http://localhost:3000
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret

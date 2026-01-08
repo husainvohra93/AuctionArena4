@@ -319,7 +319,10 @@ const TeamManagement = () => {
                                 withCredentials: true,
                                 headers: { 'Content-Type': 'multipart/form-data' }
                               });
-                              setFormData(prev => ({ ...prev, logo_url: `${BACKEND_URL}${res.data.url}` }));
+                              setFormData(prev => ({
+                                ...prev,
+                                logo_url: res.data.url.startsWith('http') ? res.data.url : `${BACKEND_URL}${res.data.url}`
+                              }));
                               toast.success('Logo uploaded!');
                             } catch (err) {
                               toast.error(err.response?.data?.detail || 'Upload failed');
